@@ -17,10 +17,10 @@ While GripWise is fundamentally robust and hackathon-ready, the following limita
 - **Reason**: Cloud storage (AWS S3 / GCP Cloud Storage) integration was deferred to prioritize core workflow logic and prevent configuration overhead during the hackathon.
 - **Impact**: The application is stateful. Moving to production requires abstracting the file system layer to an S3-compatible blob store.
 
-## 4. UI Constraints
-- **Description**: The Mechanic Dashboard and advanced Consent Management UI screens are pending complete React component integration.
-- **Reason**: Development time was heavily weighted towards securing the API, ensuring role-based access control (RBAC) was flawlessly implemented at the database tier.
-- **Impact**: While the APIs (`/api/mechanic/*`) are fully functional and tested, demonstrating the mechanic flow currently requires direct API interaction (via Swagger/Postman) or completing the frontend scaffolding.
+## 4. UI Polish and Transitions
+- **Description**: While the mechanic and consent workflows are fully functional, some edge-case transitions or advanced loading states might be minimal.
+- **Reason**: The focus was primarily on ensuring the API and database role-based access controls were flawless, followed by a functional and beautiful UI.
+- **Impact**: Demonstrating edge cases (like network failure during upload) relies on basic alerts.
 
 ## 5. Mock AI Provider
 - **Description**: The `MOCK` AI provider is configured as the default for demonstration purposes.

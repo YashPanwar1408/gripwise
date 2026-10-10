@@ -19,11 +19,10 @@ It bridges the gap between everyday riders and professional mechanics by providi
 
 ### Backend
 ```bash
-cd backend
 python -m venv venv
 venv\Scripts\activate
-pip install -r requirements.txt
-python -m uvicorn main:app --reload
+pip install -r backend/requirements.txt
+python -m uvicorn backend.main:app --reload
 ```
 
 ### Frontend
@@ -34,9 +33,8 @@ npm run dev
 ```
 
 ## Running the Tests
-GripWise boasts a rigorous, isolated test suite that verifies all core logic without relying on external dependencies.
+GripWise boasts a rigorous, isolated test suite that verifies all core logic without relying on external dependencies. Run from the project root:
 ```bash
-cd backend
 python -m pytest backend/tests/ -v
 python -m pytest ai/tests/ -v
 ```

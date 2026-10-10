@@ -3,7 +3,7 @@
 This script provides a structured narrative designed to hit every judging criteria for both the Tata Imagination Challenge (Safety Awareness) and Eurogrip TORQ Challenge 4.0 (Trust and Mechanic Engagement) within a strict 3-minute window.
 
 ## Prerequisites
-- Start the backend: `cd backend && python -m uvicorn main:app --reload`
+- Start the backend from the project root: `python -m uvicorn backend.main:app --reload`
 - Start the frontend: `cd frontend && npm run dev`
 - Ensure no real user data exists in the local database.
 

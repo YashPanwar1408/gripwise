@@ -60,10 +60,42 @@ async def list_consented_inspections(
     return ApiResponse.ok({"inspections": out})
 
 
-@router.post("/findings")
-async def add_finding(
-    req: MechanicFindingCreate,
+@router.get("/inspections/{inspection_id}")
+async def get_consented_inspection(
     inspection_id: str,
+    current_user: User = Depends(require_mechanic),
+    db: AsyncSession = Depends(get_db),
+):
+    from backend.api.inspections import _inspection_out
+    result = await db.execute(
+        select(Inspection)
+        .where(Inspection.id == inspection_id)
+        .options(selectinload(Inspection.observations))
+    )
+    insp = result.scalar_one_or_none()
+    if not insp:
+        raise HTTPException(404, detail={"code": "NOT_FOUND", "message": "Inspection not found."})
+
+    consent_res = await db.execute(
+        select(ConsentRecord).where(
+            ConsentRecord.mechanic_id == current_user.id,
+            ConsentRecord.rider_id == insp.submitted_by,
+            ConsentRecord.revoked_at == None
+        )
+    )
+    if not consent_res.scalar_one_or_none():
+        raise HTTPException(404, detail={"code": "NOT_FOUND", "message": "Inspection not found or consent revoked."})
+        
+    finding_res = await db.execute(select(MechanicFinding.id).where(MechanicFinding.inspection_id == inspection_id))
+    has_finding = finding_res.first() is not None
+
+    return ApiResponse.ok(_inspection_out(insp, mechanic_verified=has_finding))
+
+
+@router.post("/inspections/{inspection_id}/findings")
+async def add_finding(
+    inspection_id: str,
+    req: MechanicFindingCreate,
     current_user: User = Depends(require_mechanic),
     db: AsyncSession = Depends(get_db),
 ):

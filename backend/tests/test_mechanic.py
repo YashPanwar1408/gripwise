@@ -58,16 +58,51 @@ async def test_mechanic_flow(client: AsyncClient, db_session):
     }, headers=mechanic_headers)
     assert res.status_code == 200
 
-    # 6. Rider revokes consent
+    # 6. Rider submits an inspection
+    res = await client.post("/api/inspections", data={"tyre_position_id": tp_id}, files={"image": ("test.jpg", b"fake_image_bytes", "image/jpeg")}, headers=rider_token_headers)
+    assert res.status_code == 202
+    inspection_id = res.json()["data"]["inspection_id"]
+
+    # 7. Mechanic fetches the specific inspection detail
+    res = await client.get(f"/api/mechanic/inspections/{inspection_id}", headers=mechanic_headers)
+    assert res.status_code == 200
+    assert res.json()["data"]["inspection_id"] == inspection_id
+
+    # 8. Mechanic adds finding
+    res = await client.post(f"/api/mechanic/inspections/{inspection_id}/findings", json={
+        "tread_depth_mm": 2.5,
+        "mechanic_notes": "Needs alignment"
+    }, headers=mechanic_headers)
+    assert res.status_code == 200
+
+    # 9. Rider revokes consent
     consents_res = await client.get("/api/consent", headers=rider_token_headers)
     consent_id = consents_res.json()["data"][0]["id"]
     
     res = await client.delete(f"/api/consent/{consent_id}", headers=rider_token_headers)
     assert res.status_code == 200
 
-    # 7. Mechanic tries to add another service record (should fail)
+    # 10. Mechanic tries to add another service record (should fail)
     res = await client.post("/api/mechanic/service-records", json={
         "tyre_position_id": tp_id,
         "service_type": "PRESSURE_ADJUSTED"
     }, headers=mechanic_headers)
     assert res.status_code == 403
+
+    # 11. Mechanic tries to fetch inspection again (should fail)
+    res = await client.get(f"/api/mechanic/inspections/{inspection_id}", headers=mechanic_headers)
+    assert res.status_code == 404
+
+    # 12. Try another rider's inspection
+    rider2_token = await _register_and_login(client, email="m2_rider@test.com")
+    res = await client.post("/api/vehicles", json={
+        "make": "Bajaj", "model": "Pulsar", "vehicle_type": "MOTORCYCLE"
+    }, headers={"Authorization": f"Bearer {rider2_token}"})
+    v2_id = res.json()["data"]["vehicle_id"]
+    res = await client.post(f"/api/vehicles/{v2_id}/tyre-positions", json={"position": "FRONT"}, headers={"Authorization": f"Bearer {rider2_token}"})
+    tp2_id = res.json()["data"]["tyre_position_id"]
+    res = await client.post("/api/inspections", data={"tyre_position_id": tp2_id}, files={"image": ("test2.jpg", b"fake", "image/jpeg")}, headers={"Authorization": f"Bearer {rider2_token}"})
+    insp2_id = res.json()["data"]["inspection_id"]
+
+    res = await client.get(f"/api/mechanic/inspections/{insp2_id}", headers=mechanic_headers)
+    assert res.status_code == 404

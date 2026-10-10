@@ -21,7 +21,7 @@ export default function MechanicInspectionDetail() {
   useEffect(() => {
     if (user) {
       // Mechanics can read the inspection if they have consent
-      inspectionsApi.get(user.access_token, id)
+      mechanicApi.getInspection(user.access_token, id)
         .then(setInspection)
         .catch(() => {})
         .finally(() => setLoading(false));
@@ -35,14 +35,13 @@ export default function MechanicInspectionDetail() {
     setSaving(true);
     const form = new FormData(e.currentTarget);
     const body = {
-      inspection_id: id,
       tread_depth_mm: form.get("tread_depth") ? parseFloat(form.get("tread_depth") as string) : undefined,
       pressure_psi: form.get("pressure") ? parseFloat(form.get("pressure") as string) : undefined,
       notes: form.get("notes") as string
     };
     
     try {
-      await mechanicApi.addFinding(user.access_token, body);
+      await mechanicApi.addFinding(user.access_token, id, body);
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
       e.currentTarget.reset();

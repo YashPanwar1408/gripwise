@@ -139,8 +139,10 @@ export const consentApi = {
 export const mechanicApi = {
   getInspections: (token: string) =>
     request<{ inspections: Inspection[] }>("/api/mechanic/inspections", {}, token),
-  addFinding: (token: string, body: any) =>
-    request<MechanicFinding>("/api/mechanic/findings", { method: "POST", body: JSON.stringify(body) }, token),
+  getInspection: (token: string, inspectionId: string) =>
+    request<Inspection>(`/api/mechanic/inspections/${inspectionId}`, {}, token),
+  addFinding: (token: string, inspectionId: string, body: any) =>
+    request<MechanicFinding>(`/api/mechanic/inspections/${inspectionId}/findings`, { method: "POST", body: JSON.stringify(body) }, token),
   addServiceRecord: (token: string, body: any) =>
     request<ServiceRecord>("/api/mechanic/service-records", { method: "POST", body: JSON.stringify(body) }, token),
 };

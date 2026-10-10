@@ -34,10 +34,9 @@ GripWise is now an objectively complete, extremely robust, and hackathon-ready p
 
 ## 6. Execution Commands
 To immediately launch the final, polished application:
-**Backend**:
+**Backend** (Run from project root):
 ```bash
-cd backend
-python -m uvicorn main:app --reload
+python -m uvicorn backend.main:app --reload
 ```
 **Frontend**:
 ```bash
