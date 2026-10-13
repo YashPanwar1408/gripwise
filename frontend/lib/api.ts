@@ -43,13 +43,36 @@ async function request<T>(
   };
 
   const res = await fetch(`${BASE}${path}`, { ...options, headers });
-  const json: ApiResponse<T> = await res.json();
+  const json = (await res.json().catch(() => null)) as
+    | (Partial<ApiResponse<T>> & { detail?: unknown; message?: unknown })
+    | null;
 
-  if (!json.success || !res.ok) {
+  if (!res.ok || !json?.success) {
+    const detail = json?.detail;
+    const detailObject =
+      detail !== null && typeof detail === "object" && !Array.isArray(detail)
+        ? (detail as { code?: unknown; message?: unknown })
+        : null;
+    const validationMessage = Array.isArray(detail)
+      ? detail
+          .map((item) =>
+            item && typeof item === "object" && "msg" in item && typeof item.msg === "string"
+              ? item.msg
+              : "Invalid request"
+          )
+          .join("; ")
+      : undefined;
+
     throw new ApiError(
-      json.error?.code ?? "UNKNOWN",
-      json.error?.message ?? "An error occurred",
-      json.error?.details
+      json?.error?.code ??
+        (typeof detailObject?.code === "string" ? detailObject.code : `HTTP_${res.status}`),
+      json?.error?.message ??
+        (typeof detail === "string" ? detail : undefined) ??
+        (typeof detailObject?.message === "string" ? detailObject.message : undefined) ??
+        validationMessage ??
+        (typeof json?.message === "string" ? json.message : undefined) ??
+        (res.statusText || "Request failed"),
+      json?.error?.details
     );
   }
   return json.data as T;
@@ -164,7 +187,7 @@ export const mechanicApi = {
     request<ServiceRecord>("/api/mechanic/service-records", { method: "POST", body: JSON.stringify(body) }, token),
 };
 
-// ── GripWise Saathi API ───────────────────────────────────────────
+// ── Mechanic Growth API ────────────────────────────────────────────
 
 export const saathiApi = {
   getDashboard: (token: string) =>

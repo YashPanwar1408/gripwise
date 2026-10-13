@@ -1,4 +1,4 @@
-"""GripWise Saathi — Mechanic Advocacy & Engagement schema.
+"""Mechanic Growth profile, learning, recognition, and follow-up schema.
 
 Revision ID: 002_saathi_engagement
 Revises: 001_initial
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import JSONB
 
 revision: str = "002_saathi_engagement"
-down_revision: Union[str, None] = "001_initial"
+down_revision: Union[str, None] = "001_mechanic_core"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -94,7 +94,7 @@ def upgrade() -> None:
         sa.Column("vehicle_model", sa.String(100), nullable=False),
         sa.Column("tyre_need", sa.String(50), nullable=False),
         sa.Column("status", sa.String(30), nullable=False, server_default="PENDING"),
-        sa.Column("consent_confirmed", sa.Boolean, nullable=False, server_default="true"),
+        sa.Column("consent_confirmed", sa.Boolean, nullable=False, server_default="false"),
         sa.Column("service_record_id", sa.String(36), sa.ForeignKey("service_records.id"), nullable=True),
         sa.Column("notes", sa.Text, nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()")),

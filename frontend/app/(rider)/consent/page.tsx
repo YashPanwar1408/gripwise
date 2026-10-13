@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { consentApi } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { formatDate } from "@/lib/format-date";
 import type { ConsentRecord } from "@/lib/types";
 import { ShieldAlert, ShieldCheck, Trash2, Key } from "lucide-react";
 
@@ -32,13 +33,19 @@ export default function ConsentManagement() {
   const handleGrant = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!user) return;
+    const form = e.currentTarget;
+    const mechanicId = String(new FormData(form).get("mechanic_id") ?? "").trim();
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(mechanicId)) {
+      setError("Enter the mechanic's full Workshop ID. It is a UUID shown on their Service Queue page.");
+      return;
+    }
+
     setGranting(true);
     setError("");
-    const mechanicId = new FormData(e.currentTarget).get("mechanic_id") as string;
     try {
       await consentApi.grant(user.access_token, mechanicId);
-      e.currentTarget.reset();
-      fetchConsents();
+      form.reset();
+      await fetchConsents();
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -76,7 +83,21 @@ export default function ConsentManagement() {
         <form onSubmit={handleGrant} className="flex gap-4 items-end">
           <div className="flex-1">
             <label className="label">Mechanic ID</label>
-            <input name="mechanic_id" type="text" className="input" placeholder="Paste the mechanic's Workshop ID here..." required />
+            <input
+              name="mechanic_id"
+              type="text"
+              className="input"
+              placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+              autoComplete="off"
+              minLength={36}
+              maxLength={36}
+              pattern="[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
+              title="Enter the mechanic's full 36-character Workshop ID."
+              required
+            />
+            <p className="mt-2 text-xs text-[hsl(var(--color-text-muted))]">
+              Ask the mechanic to copy their Workshop ID from the Service Queue page. Enter the full UUID, not a phone number or short numeric code.
+            </p>
           </div>
           <button type="submit" disabled={granting} className="btn-primary">
             {granting ? "Granting..." : "Grant Access"}
@@ -109,7 +130,7 @@ export default function ConsentManagement() {
                 {consents.map(consent => (
                   <tr key={consent.id} className="hover:bg-[hsl(var(--color-surface-3))] transition-colors">
                     <td className="p-4 font-mono">{consent.mechanic_id}</td>
-                    <td className="p-4">{new Date(consent.created_at).toLocaleDateString()}</td>
+                    <td className="p-4">{formatDate(consent.granted_at)}</td>
                     <td className="p-4 text-right">
                       <button 
                         onClick={() => handleRevoke(consent.id)}

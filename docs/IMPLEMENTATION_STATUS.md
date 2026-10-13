@@ -1,46 +1,26 @@
 # GripWise Implementation Status
 
-## Phase 1: MVP Core (Rider App)
-**Status**: Completed
-- Implemented robust rider account and vehicle management.
-- Developed the complete tyre inspection upload workflow.
-- Created `MockProvider` for deterministic testing.
-- Configured SQLite queue via FastAPI `BackgroundTasks`.
-- **Evidence**: Passing E2E test suite in `test_inspections.py` and `test_vehicles.py`.
+## Core rider and workshop workflows
 
-## Phase 2: AI Pipeline (Tyre CV)
-**Status**: Completed
-- Re-implemented and adapted OpenCV pipelines for tread proxy score and circularity-based anomaly detection.
-- Developed `cv_provider.py` implementing `InferenceProvider` interface, integrating safety boundaries (blur, brightness, size checks).
-- Replaced unreliable percentage measurements with qualitative feedback tiers (`HIGH_CONFIDENCE`, `MEDIUM_CONFIDENCE`).
-- **Evidence**: 5 new tests in `test_cv_provider.py` cover edge cases like low-res and corrupted inputs.
+- Rider registration, vehicle records, inspection uploads, reports, and service history are implemented.
+- Riders grant and revoke mechanic access through the consent workflow.
+- Mechanics see only inspections authorized for their Workshop ID, and can add physical findings and service records.
+- The inspection provider defaults to `mock`; simulated output is identified in the interface.
 
-## Phase 3: Mechanic Module
-**Status**: Completed (Backend & Frontend)
-- Created robust schema and tables for `MechanicFinding`, `ConsentRecord`, and `ServiceRecord`.
-- Implemented role-based access (`MECHANIC` vs `RIDER`).
-- Enforced strict consent rules: Mechanics can only access inspections and log service actions for riders who explicitly granted them access via `/api/consent`.
-- Added comprehensive audit trails for mechanic actions.
-- Built Mechanic Dashboard and Rider Consent management UIs.
-- Integrated the "Mechanic Verified" badge and data display in the Rider Inspection Detail view.
-- **Evidence**: Covered by `test_mechanic.py`.
+## Mechanic Growth
 
-## Phase 4: GripWise Saathi — Mechanic Advocacy & Engagement (Eurogrip TORQ 4.0, Case Study 4)
-**Status**: Completed (Backend & Frontend)
-- **Database Architecture**: Added tables for `mechanic_profiles`, `learning_modules`, `mechanic_module_completions`, `mechanic_badges`, `mechanic_earned_badges`, `customer_referrals`, and `saathi_program_initiatives`.
-- **Database Migration**: Added Alembic revision `002_saathi_engagement.py`.
-- **Backend Endpoints (`/api/saathi`)**:
-  - `GET /api/saathi/dashboard`: Real aggregated metrics, tier, points, profile completion, badge status.
-  - `GET /api/saathi/profile` & `PUT /api/saathi/profile`: Mechanic workshop profile and dynamic completeness calculation.
-  - `GET /api/saathi/learning/modules` & `GET /api/saathi/learning/modules/{id}`: Curriculum with 5 technical tyre-care modules and quizzes.
-  - `POST /api/saathi/learning/modules/{id}/quiz`: Technical quiz submission, automatic scoring (>=66% pass threshold), idempotent points reward (+50 points, no duplicates on retakes), and automated badge unlocking.
-  - `GET /api/saathi/badges`: Verifiable participation badges catalogue and earned status.
-  - `GET /api/saathi/referrals`, `POST /api/saathi/referrals`, & `PATCH /api/saathi/referrals/{id}`: Consent-aware customer follow-up tracking with privacy protection and status transitions.
-  - `GET /api/saathi/initiatives`: Proposed Eurogrip TORQ Challenge 4.0 tool-support and brand education initiatives.
-- **Role Authorization & Isolation**: Strictly enforced `require_mechanic` (403 for non-mechanics); tenant isolation guarantees mechanics only access their own records.
-- **Frontend Portal (`/mechanic/saathi`)**: Built tabbed advocacy dashboard, learning hub with quiz modal and instant grading feedback, profile editor, customer follow-up manager, and Eurogrip TORQ 4.0 strategic concept explorer.
-- **Evidence**: 7 dedicated automated tests in `test_saathi.py` (all 29 backend tests pass) and Next.js 16 production build compiles with zero errors.
+The mechanic profile, completion checklist, learning modules, quizzes, activity recognition, and consent-aware customer follow-ups reuse the existing tables and API routes. For compatibility, the frontend path remains `/mechanic/saathi` and the backend namespace remains `/api/saathi`; the user-facing label is **Mechanic Growth**.
 
-## Outstanding Deferred Features
-- **CNN Classifier Model**: Excluded due to missing weights and lack of provenance in reference repos.
-- **Lifespan Prediction**: Dropped due to lack of real telemetry data.
+Profile completion recognition is labelled as a completion marker and does not verify a workshop. Learning and activity badges are not third-party certifications. Seeded learning and badge copy is refreshed by stable IDs; completion, earned-badge, referral, and service records are preserved.
+
+## Optional Partner Programmes
+
+Proposal examples are hidden by default. The backend endpoint returns an empty list unless `ENABLE_PARTNER_PROGRAMMES=true`; the frontend tab and request are also disabled unless `NEXT_PUBLIC_ENABLE_PARTNER_PROGRAMMES=true`. Enabling both switches only exposes conceptual examples and does not create an approved offer or partnership.
+
+## Database and migrations
+
+The existing profile, learning, recognition, referral, and initiative tables remain in place. Migration `001_mechanic_core.py` creates the rider-consent, mechanic-findings, and service-record tables required before `002_saathi_engagement.py`; it does not rewrite existing rows. The Saathi migration now depends on that core-workshop revision so the referral foreign key targets a table created earlier in the chain.
+
+## Validation
+
+Current workspace checks: 44 backend and AI tests passed; the Next.js production build passed; the Alembic chain applied to a disposable PostgreSQL 16 database through `003_followup_consent_default`, and a second upgrade was clean. See [TEST_REPORT.md](TEST_REPORT.md) for the commands and scope.

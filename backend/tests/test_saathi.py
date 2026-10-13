@@ -14,6 +14,7 @@ Tests cover:
 import pytest
 import uuid
 from httpx import AsyncClient
+from backend.config import settings
 
 
 @pytest.fixture
@@ -80,7 +81,8 @@ async def test_saathi_dashboard_empty_state(client: AsyncClient, mechanic_token_
     assert data["verified_findings_count"] == 0
     assert data["recorded_services_count"] == 0
     assert data["total_referrals_count"] == 0
-    assert data["case_study_context"]["challenge"] == "Eurogrip TORQ Challenge 4.0 (Case Study 4)"
+    assert data["case_study_context"]["program_name"] == "Mechanic Growth"
+    assert "partnership" not in data["case_study_context"]["disclaimer"].lower()
 
 
 @pytest.mark.asyncio
@@ -174,6 +176,14 @@ async def test_quiz_scoring_and_idempotent_points(client: AsyncClient, mechanic_
 @pytest.mark.asyncio
 async def test_customer_referral_workflow_and_isolation(client: AsyncClient, mechanic_token_headers, mechanic_b_headers):
     """Test consent-aware customer follow-up creation, status updates, and mechanic isolation."""
+    no_consent_res = await client.post("/api/saathi/referrals", json={
+        "customer_name_masked": "Test",
+        "vehicle_model": "Test vehicle",
+        "tyre_need": "PRESSURE_CHECK",
+        "consent_confirmed": False,
+    }, headers=mechanic_token_headers)
+    assert no_consent_res.status_code == 400
+
     # 1. Mechanic A logs a referral
     create_res = await client.post("/api/saathi/referrals", json={
         "customer_name_masked": "Ramesh K.",
@@ -228,17 +238,31 @@ async def test_role_authorization_enforcement(client: AsyncClient, rider_token_h
 
 
 @pytest.mark.asyncio
-async def test_eurogrip_torq_initiatives_endpoint(client: AsyncClient, mechanic_token_headers):
-    """Test the Eurogrip TORQ Challenge 4.0 Case Study 4 proposed initiatives endpoint."""
+async def test_partner_programmes_disabled_by_default(client: AsyncClient, mechanic_token_headers):
+    """Optional partner concepts are absent unless explicitly enabled."""
+    settings.ENABLE_PARTNER_PROGRAMMES = False
     res = await client.get("/api/saathi/initiatives", headers=mechanic_token_headers)
     assert res.status_code == 200
     data = res.json()["data"]
 
-    assert "Eurogrip TORQ Challenge 4.0" in data["case_study"]
-    assert "Not an official corporate partnership" in data["program_disclaimer"]
+    assert data["initiatives"] == []
+    assert "disabled" in data["program_disclaimer"].lower()
+
+
+@pytest.mark.asyncio
+async def test_partner_programmes_endpoint_when_enabled(client: AsyncClient, mechanic_token_headers, monkeypatch):
+    """Explicit configuration enables proposal-only concepts without implying a partnership."""
+    monkeypatch.setattr(settings, "ENABLE_PARTNER_PROGRAMMES", True)
+    res = await client.get("/api/saathi/initiatives", headers=mechanic_token_headers)
+    assert res.status_code == 200
+    data = res.json()["data"]
+
+    assert data["case_study"] == "Optional partner programme concepts"
+    assert "No manufacturer partnership" in data["program_disclaimer"]
     initiatives = data["initiatives"]
     assert len(initiatives) >= 4
     categories = [i["category"] for i in initiatives]
     assert "TOOL_SUPPORT" in categories
     assert "SAFETY_SIGNAGE" in categories
-    assert "BRAND_WORKSHOP" in categories
+    assert "LEARNING_SESSION" in categories
+    assert all("case_study_source" not in initiative["tool_specs"] for initiative in initiatives)

@@ -18,6 +18,8 @@ log = structlog.get_logger()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     log.info("gripwise.startup", env=settings.ENVIRONMENT)
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
     yield
     log.info("gripwise.shutdown")
 

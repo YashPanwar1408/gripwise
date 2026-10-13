@@ -83,7 +83,11 @@ export interface ConsentRecord {
   id: string;
   rider_id: string;
   mechanic_id: string;
-  created_at: string;
+  granted_at: string;
+  revoked_at: string | null;
+  mechanic_name?: string | null;
+  workshop_name?: string | null;
+  rider_name?: string | null;
 }
 
 export interface MechanicFinding {
@@ -109,7 +113,7 @@ export interface ServiceRecord {
   created_at: string;
 }
 
-// ── GripWise Saathi Types ──────────────────────────────────────────
+// ── Mechanic Growth Types ──────────────────────────────────────────
 
 export interface MechanicProfile {
   user_id: string;

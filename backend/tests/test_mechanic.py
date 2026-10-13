@@ -82,6 +82,10 @@ async def test_mechanic_flow(client: AsyncClient, db_session):
     res = await client.delete(f"/api/consent/{consent_id}", headers=rider_token_headers)
     assert res.status_code == 200
 
+    active_consents_res = await client.get("/api/consent", headers=rider_token_headers)
+    assert active_consents_res.status_code == 200
+    assert active_consents_res.json()["data"] == []
+
     # 10. Mechanic tries to add another service record (should fail)
     res = await client.post("/api/mechanic/service-records", json={
         "tyre_position_id": tp_id,

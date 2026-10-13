@@ -131,6 +131,8 @@ class TyrePositionCreate(BaseModel):
     installed_at: Optional[date] = None
     installed_km: Optional[int] = None
 
+    model_config = {"protected_namespaces": ()}
+
 
 class TyrePositionOut(BaseModel):
     tyre_position_id: str
@@ -143,7 +145,7 @@ class TyrePositionOut(BaseModel):
     installed_km: Optional[int]
     created_at: datetime
 
-    model_config = {"from_attributes": True}
+    model_config = {"from_attributes": True, "protected_namespaces": ()}
 
 
 class VehicleOut(BaseModel):
@@ -186,7 +188,7 @@ class InspectionOut(BaseModel):
     inference_ms: Optional[float]
     mechanic_verified: bool = False
 
-    model_config = {"from_attributes": True}
+    model_config = {"from_attributes": True, "protected_namespaces": ()}
 
 
 class InspectionSummary(BaseModel):
@@ -359,7 +361,7 @@ class CustomerReferralCreate(BaseModel):
     vehicle_model: str
     tyre_need: str  # REPLACEMENT_INSPECTION, PRESSURE_CHECK, PUNCTURE_FOLLOWUP, TREAD_WEAR_MONITORING
     notes: Optional[str] = None
-    consent_confirmed: bool = True
+    consent_confirmed: bool = False
 
     @field_validator("customer_name_masked")
     @classmethod

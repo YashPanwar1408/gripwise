@@ -1,4 +1,4 @@
-"""GripWise Saathi — Business logic service for mechanic advocacy & engagement."""
+"""Mechanic profile, learning, recognition, and follow-up business logic."""
 from datetime import datetime
 from typing import List, Dict, Any, Tuple
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -27,12 +27,31 @@ from backend.services.saathi_seed import (
 
 
 async def ensure_seed_data(db: AsyncSession) -> None:
-    """Idempotently seed learning modules, badges, and proposed initiatives if missing."""
+    """Seed and refresh centrally maintained learning and recognition copy without touching user activity."""
     # 1. Modules
     result = await db.execute(select(func.count(LearningModule.id)))
     if (result.scalar() or 0) == 0:
         for mod_data in SEED_MODULES:
             db.add(LearningModule(**mod_data))
+        await db.commit()
+
+    # Refresh centrally authored copy in existing databases as well. Completion records refer to stable IDs and are untouched.
+    seeded_modules = {item["id"]: item for item in SEED_MODULES}
+    modules_res = await db.execute(select(LearningModule))
+    modules_changed = False
+    for module in modules_res.scalars().all():
+        seed = seeded_modules.get(module.id)
+        if not seed:
+            continue
+        for field in (
+            "module_code", "title", "category", "estimated_minutes", "summary",
+            "content_markdown", "technical_source", "points_reward", "quiz_questions",
+        ):
+            value = seed[field]
+            if getattr(module, field) != value:
+                setattr(module, field, value)
+                modules_changed = True
+    if modules_changed:
         await db.commit()
 
     # 2. Badges
@@ -42,11 +61,42 @@ async def ensure_seed_data(db: AsyncSession) -> None:
             db.add(MechanicBadge(**badge_data))
         await db.commit()
 
+    # Keep public badge labels aligned with the actual eligibility checks, preserving earned-badge rows.
+    seeded_badges = {item["id"]: item for item in SEED_BADGES}
+    badges_res = await db.execute(select(MechanicBadge))
+    badges_changed = False
+    for badge in badges_res.scalars().all():
+        seed = seeded_badges.get(badge.id)
+        if not seed:
+            continue
+        for field in ("title", "description", "criteria_description"):
+            value = seed[field]
+            if getattr(badge, field) != value:
+                setattr(badge, field, value)
+                badges_changed = True
+    if badges_changed:
+        await db.commit()
+
     # 3. Initiatives
     result = await db.execute(select(func.count(SaathiProgramInitiative.id)))
     if (result.scalar() or 0) == 0:
         for init_data in SEED_INITIATIVES:
             db.add(SaathiProgramInitiative(**init_data))
+        await db.commit()
+
+    seeded_initiatives = {item["id"]: item for item in SEED_INITIATIVES}
+    initiatives_res = await db.execute(select(SaathiProgramInitiative))
+    initiatives_changed = False
+    for initiative in initiatives_res.scalars().all():
+        seed = seeded_initiatives.get(initiative.id)
+        if not seed:
+            continue
+        for field in ("title", "category", "description", "eligibility_level", "status", "tool_specs"):
+            value = seed[field]
+            if getattr(initiative, field) != value:
+                setattr(initiative, field, value)
+                initiatives_changed = True
+    if initiatives_changed:
         await db.commit()
 
 
@@ -285,9 +335,9 @@ async def get_mechanic_stats(mechanic_id: str, db: AsyncSession) -> Dict[str, An
         "all_badges": all_badges_out,
         "scoring_rules": SCORING_RULES,
         "case_study_context": {
-            "program_name": "GripWise Saathi — Mechanic Advocacy & Engagement",
-            "challenge": "Eurogrip TORQ Challenge 4.0 (Case Study 4)",
-            "purpose": "Empower two-wheeler mechanics through technical tyre skills, verified recognition, and customer trust rather than transactional discounts.",
-            "disclaimer": "Proposed programme concept for Eurogrip TORQ Challenge 4.0 Case Study 4. Not an official corporate partnership or funded commercial program.",
+            "program_name": "Mechanic Growth",
+            "challenge": "Tyre safety and mechanic professional development",
+            "purpose": "Support mechanic learning, accurate workshop profiles, consented service records, and customer trust.",
+            "disclaimer": "Mechanic Growth is a GripWise feature. It is not a professional certification or partner programme.",
         },
     }

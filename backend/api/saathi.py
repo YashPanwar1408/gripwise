@@ -1,12 +1,11 @@
-"""GripWise Backend — Saathi Mechanic Advocacy & Engagement API.
+"""GripWise backend API for mechanic profile, learning, and follow-up features.
 
-Designed for Eurogrip TORQ Challenge 4.0, Case Study 4.
 Provides:
 - Mechanic Professional Profile with verifiable completion
 - Tyre-Care Learning Hub (educational modules, quizzes, transparent guidance)
 - Verifiable Recognition, Points & Badges (anti-brand-bias, transparent scoring)
 - Consent-aware Customer Referrals & Follow-ups
-- Proposed Eurogrip TORQ Challenge 4.0 tool-support initiatives
+- Optional partner programme concepts, disabled by default
 """
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -16,6 +15,7 @@ from sqlalchemy.orm import selectinload
 import structlog
 
 from backend.database import get_db
+from backend.config import settings
 from backend.models import (
     User,
     MechanicProfile,
@@ -61,7 +61,7 @@ async def require_mechanic(user: User = Depends(get_current_user)) -> User:
     if user.role != "MECHANIC":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail={"code": "FORBIDDEN", "message": "Mechanic role required for GripWise Saathi features."},
+            detail={"code": "FORBIDDEN", "message": "Mechanic role required for Mechanic Growth features."},
         )
     return user
 
@@ -415,6 +415,15 @@ async def create_customer_referral(
     db: AsyncSession = Depends(get_db),
 ):
     """Logs a new customer tyre safety follow-up or referral (consent-aware, privacy protected)."""
+    if not req.consent_confirmed:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                "code": "CUSTOMER_CONSENT_REQUIRED",
+                "message": "Customer agreement is required before saving a follow-up.",
+            },
+        )
+
     referral = CustomerReferral(
         mechanic_id=current_user.id,
         customer_name_masked=req.customer_name_masked,
@@ -523,14 +532,21 @@ async def update_customer_referral_status(
     return ApiResponse.ok(out)
 
 
-# ── Eurogrip TORQ Challenge 4.0 Case Study 4 Programme Initiatives ──
+# ── Optional partner programme concepts ──
 
 @router.get("/initiatives", response_model=ApiResponse)
 async def list_program_initiatives(
     current_user: User = Depends(require_mechanic),
     db: AsyncSession = Depends(get_db),
 ):
-    """Returns proposed tool-support and brand education initiatives for Eurogrip TORQ Challenge 4.0."""
+    """Returns optional partner programme concepts when enabled in application configuration."""
+    if not settings.ENABLE_PARTNER_PROGRAMMES:
+        return ApiResponse.ok({
+            "case_study": "Optional partner programme concepts",
+            "program_disclaimer": "Disabled by configuration. No partner offers are active.",
+            "initiatives": [],
+        })
+
     await ensure_seed_data(db)
 
     result = await db.execute(select(SaathiProgramInitiative).order_by(SaathiProgramInitiative.title.asc()))
@@ -545,11 +561,15 @@ async def list_program_initiatives(
             "description": init.description,
             "eligibility_level": init.eligibility_level,
             "status": init.status,
-            "tool_specs": init.tool_specs,
+            "tool_specs": {
+                key: value
+                for key, value in (init.tool_specs or {}).items()
+                if key != "case_study_source"
+            },
         })
 
     return ApiResponse.ok({
-        "case_study": "Eurogrip TORQ Challenge 4.0 — Case Study 4: Mechanic Advocacy & Engagement",
-        "program_disclaimer": "Proposed programme concept for Eurogrip TORQ Challenge 4.0 Case Study 4. Not an official corporate partnership, funding commitment, or commercial warranty.",
+        "case_study": "Optional partner programme concepts",
+        "program_disclaimer": "Concept examples only. No manufacturer partnership, sponsorship, funding, or accreditation is confirmed.",
         "initiatives": out,
     })

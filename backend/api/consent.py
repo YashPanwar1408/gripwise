@@ -72,9 +72,17 @@ async def list_consents(
     db: AsyncSession = Depends(get_db),
 ):
     if current_user.role == "RIDER":
-        query = select(ConsentRecord, User).join(User, User.id == ConsentRecord.mechanic_id).where(ConsentRecord.rider_id == current_user.id)
+        query = (
+            select(ConsentRecord, User)
+            .join(User, User.id == ConsentRecord.mechanic_id)
+            .where(ConsentRecord.rider_id == current_user.id, ConsentRecord.revoked_at.is_(None))
+        )
     elif current_user.role == "MECHANIC":
-        query = select(ConsentRecord, User).join(User, User.id == ConsentRecord.rider_id).where(ConsentRecord.mechanic_id == current_user.id)
+        query = (
+            select(ConsentRecord, User)
+            .join(User, User.id == ConsentRecord.rider_id)
+            .where(ConsentRecord.mechanic_id == current_user.id, ConsentRecord.revoked_at.is_(None))
+        )
     else:
         return ApiResponse.ok([])
 

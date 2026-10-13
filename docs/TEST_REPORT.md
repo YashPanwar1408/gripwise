@@ -1,43 +1,34 @@
-# GripWise Rigorous Verification & Test Report
+# GripWise Test and Build Report
 
-**Date**: 2026-10-10
-**Status**: VERIFIED 
+**Execution date:** 2026-10-13
+**Status:** The automated backend/AI suite and frontend production build passed.
 
-This document serves as the canonical record of the system's test performance against the core product requirements.
+## Automated tests
 
-## 1. Backend API & Core Logic
-**Command Executed**: `python -m pytest backend/tests/ -v`
-**Result**: `22 passed`
+**Command:** **pytest backend/tests ai/tests -v**
+**Result:** **44 passed in 28.84s**
 
-### Sub-domains Verified:
-- **Authentication (`test_auth.py`)**: Rider and Mechanic registration, missing required fields validations, short passwords, duplicate emails, and role-based login all passed.
-- **Vehicles & Tyres (`test_vehicles.py`)**: Vehicle creation, isolation (cannot access other riders' vehicles), and duplicate tyre position prevention passed.
-- **Inspections (`test_inspections.py`)**: Inspection submission, content-type validation, retrieval, and access isolation passed.
-- **Mechanic Workflow (`test_mechanic.py`)**: End-to-end flow verified. A mechanic can register, a rider can grant consent, the mechanic can view authorized inspections, record a service, and then upon revocation of consent by the rider, the mechanic's access is immediately revoked (`403 FORBIDDEN`).
+Coverage includes authentication and role checks, rider/vehicle ownership, inspection access, mechanic consent and service workflows, Mechanic Growth profile and learning flows, consent-gated follow-ups, optional partner-programme defaults, and mock/computer-vision provider behavior.
 
-## 2. AI Inference Interfaces
-**Command Executed**: `python -m pytest ai/tests/ -v`
-**Result**: `14 passed`
+The suite uses a temporary SQLite database and temporary upload directory. It does not use the repository's test.db.
 
-### Sub-domains Verified:
-- **Computer Vision Provider (`test_cv_provider.py`)**: Handled success paths, corrupted images, low-resolution images, and extremely dark images properly by rejecting them via quality gates before processing.
-- **Mock Provider (`test_mock_provider.py`)**: Successfully fell back to deterministic mock results, ensuring confidence tiers and necessary disclaimers were present in every mocked payload.
+## Frontend build
 
-## 3. Database Persistence & Migrations
-- **Status**: VERIFIED
-- **Findings**: The `test.db` SQLite schema dynamically constructs `users`, `vehicles`, `tyre_positions`, `inspections`, `mechanic_findings`, `consent_records`, and `service_records`. Foreign keys correctly enforce relational integrity (e.g., trying to log a service record without a valid mechanic/rider throws integrity errors as intended in tests).
+**Command:** **npm run build** from frontend
+**Result:** Exit code 0. Next.js compiled, TypeScript passed, and all app routes were generated, including both dynamic inspection routes.
 
-## 4. Security & Permissions
-- **Status**: VERIFIED
-- **Findings**: 
-  - Token-based access limits users to their own data via `get_current_user` dependencies.
-  - Role checks prevent riders from accessing mechanic endpoints.
-  - Consent boundary strictly isolates a mechanic's dashboard to only explicit opt-ins.
+## Database migrations
 
-## 5. UI Build & Checks
-- **Status**: IN PROGRESS
-- **Command Executed**: `npm run build`
-- **Findings**: TypeScript strict typing and ESLint checks are passing. Production bundle optimization confirmed.
+The Alembic chain was run against an empty, disposable PostgreSQL 16 database:
 
----
-**Verdict**: The Backend and AI logic are rock solid and fully hackathon-ready. All workflows correctly map to product requirements and execute without unhandled exceptions.
+- Revisions 001_initial, 001_mechanic_core, 002_saathi_engagement, and 003_followup_consent_default applied in order.
+- Alembic current reported 003_followup_consent_default (head).
+- A second upgrade head completed without additional changes.
+
+The container had no mounted volume and was removed after the check.
+
+## Additional checks
+
+**git diff --check** passed. Its only output was Git's line-ending notice for files that may be converted from LF to CRLF on Windows.
+
+This report describes local automated checks; it is not a penetration test, deployment review, or validation of real-world tyre-analysis accuracy.

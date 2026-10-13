@@ -2,11 +2,23 @@
 GripWise Backend — Async SQLAlchemy database setup.
 """
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+from sqlalchemy.engine import make_url
 from sqlalchemy.orm import DeclarativeBase
 from backend.config import settings
 
+database_url = make_url(settings.DATABASE_URL)
+if database_url.drivername == "postgresql+asyncpg":
+    # Convert libpq's sslmode option to asyncpg's ssl keyword and discard
+    # channel_binding, which asyncpg does not currently support.
+    query = dict(database_url.query)
+    sslmode = query.pop("sslmode", None)
+    query.pop("channel_binding", None)
+    if sslmode is not None:
+        query.setdefault("ssl", sslmode)
+    database_url = database_url.set(query=query)
+
 engine = create_async_engine(
-    settings.DATABASE_URL,
+    database_url,
     echo=False,
     pool_pre_ping=True,
 )

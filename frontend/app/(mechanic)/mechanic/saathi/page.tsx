@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { saathiApi } from "@/lib/api";
+import { formatDate } from "@/lib/format-date";
 import type {
   SaathiDashboardStats,
   MechanicProfile,
@@ -38,9 +39,53 @@ import {
   TrendingUp,
 } from "lucide-react";
 
-type TabKey = "overview" | "learning" | "profile" | "referrals" | "eurogrip_concept";
+type TabKey = "overview" | "learning" | "profile" | "referrals" | "partner_programmes";
 
-export default function GripWiseSaathiPortal() {
+const partnerProgrammesEnabled = process.env.NEXT_PUBLIC_ENABLE_PARTNER_PROGRAMMES === "true";
+
+const badgeLabels: Record<string, { title: string; description: string; criteria: string }> = {
+  BADGE_WELCOME: {
+    title: "Profile Complete",
+    description: "Completed the workshop profile information checklist.",
+    criteria: "Reach at least 80% profile completeness using accurate workshop details.",
+  },
+  BADGE_LEARNING_PIONEER: {
+    title: "Knowledge Pioneer",
+    description: "Passed a tyre-care learning module quiz.",
+    criteria: "Pass any learning module quiz with the required score.",
+  },
+  BADGE_TYRE_SCHOLAR: {
+    title: "Tyre-Care Learner",
+    description: "Completed the available core learning modules.",
+    criteria: "Pass all five core learning module quizzes.",
+  },
+  BADGE_INSPECTION_PRO: {
+    title: "Physical Findings Recorder",
+    description: "Recorded measurements during consented physical inspections.",
+    criteria: "Log physical findings on at least three consented rider inspections.",
+  },
+  BADGE_SERVICE_CHAMPION: {
+    title: "Service Record Keeper",
+    description: "Recorded completed tyre service work.",
+    criteria: "Log at least three completed tyre service records.",
+  },
+  BADGE_SAFETY_ADVOCATE: {
+    title: "Responsible Recommendations Learner",
+    description: "Completed the learning module on responsible tyre recommendations.",
+    criteria: "Pass the responsible recommendations module and reach the required participation score.",
+  },
+};
+
+const formatTier = (tier: string) => tier.replace(/ Saathi$/, "");
+const formatBadgeLabel = (label: string) =>
+  label
+    .replace("Verified Workshop Saathi", "Profile Complete")
+    .replace("Master Saathi", "Master")
+    .replace("Gold Saathi", "Gold")
+    .replace("Silver Saathi", "Silver")
+    .replace("Bronze Saathi", "Bronze");
+
+export default function MechanicGrowthPortal() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<TabKey>("overview");
   const [stats, setStats] = useState<SaathiDashboardStats | null>(null);
@@ -48,6 +93,7 @@ export default function GripWiseSaathiPortal() {
   const [modules, setModules] = useState<LearningModuleSummary[]>([]);
   const [referrals, setReferrals] = useState<CustomerReferral[]>([]);
   const [initiatives, setInitiatives] = useState<SaathiProgramInitiative[]>([]);
+  const [partnerProgrammesError, setPartnerProgrammesError] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [refreshing, setRefreshing] = useState(false);
@@ -78,7 +124,7 @@ export default function GripWiseSaathiPortal() {
     vehicle_model: "",
     tyre_need: "TREAD_WEAR_MONITORING",
     notes: "",
-    consent_confirmed: true,
+    consent_confirmed: false,
   });
   const [savingReferral, setSavingReferral] = useState(false);
 
@@ -89,12 +135,11 @@ export default function GripWiseSaathiPortal() {
     if (!user) return;
     try {
       setError("");
-      const [dashData, profData, modsData, refsData, initsData] = await Promise.all([
+      const [dashData, profData, modsData, refsData] = await Promise.all([
         saathiApi.getDashboard(user.access_token),
         saathiApi.getProfile(user.access_token),
         saathiApi.getModules(user.access_token),
         saathiApi.getReferrals(user.access_token),
-        saathiApi.getInitiatives(user.access_token),
       ]);
       setStats(dashData);
       setProfile(profData);
@@ -107,9 +152,21 @@ export default function GripWiseSaathiPortal() {
       });
       setModules(modsData.modules);
       setReferrals(refsData.referrals);
-      setInitiatives(initsData.initiatives);
+      if (partnerProgrammesEnabled) {
+        try {
+          const initsData = await saathiApi.getInitiatives(user.access_token);
+          setInitiatives(initsData.initiatives);
+          setPartnerProgrammesError("");
+        } catch {
+          setInitiatives([]);
+          setPartnerProgrammesError("Partner programme concepts are unavailable right now.");
+        }
+      } else {
+        setInitiatives([]);
+        setPartnerProgrammesError("");
+      }
     } catch (err: any) {
-      setError(err.message || "Failed to load Saathi engagement data");
+      setError(err.message || "Mechanic Growth data could not be loaded.");
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -197,6 +254,10 @@ export default function GripWiseSaathiPortal() {
   const handleCreateReferral = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
+    if (!referralForm.consent_confirmed) {
+      alert("Only save a follow-up after the customer has agreed to it.");
+      return;
+    }
     try {
       setSavingReferral(true);
       await saathiApi.createReferral(user.access_token, referralForm);
@@ -207,7 +268,7 @@ export default function GripWiseSaathiPortal() {
         vehicle_model: "",
         tyre_need: "TREAD_WEAR_MONITORING",
         notes: "",
-        consent_confirmed: true,
+        consent_confirmed: false,
       });
       const [refRes, dashRes] = await Promise.all([
         saathiApi.getReferrals(user.access_token),
@@ -255,25 +316,16 @@ export default function GripWiseSaathiPortal() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
-      {/* Top Banner / Program Header */}
-      <div className="rounded-2xl border border-orange-500/30 bg-gradient-to-br from-orange-500/10 via-[hsl(var(--color-surface-2))] to-amber-500/10 p-6 md:p-8 relative overflow-hidden">
+      <div className="rounded-2xl border border-blue-500/25 bg-gradient-to-br from-blue-500/10 via-[hsl(var(--color-surface-2))] to-[hsl(var(--color-surface-2))] p-6 md:p-8 relative overflow-hidden">
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-2">
-            <div className="flex flex-wrap items-center gap-2.5">
-              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-orange-500/20 text-orange-300 border border-orange-500/30 flex items-center gap-1.5">
-                <Sparkles className="h-3.5 w-3.5" />
-                Eurogrip TORQ Challenge 4.0 &bull; Case Study 4
-              </span>
-              <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-500/10 text-blue-300 border border-blue-500/20">
-                Mechanic Advocacy &amp; Engagement Programme
-              </span>
-            </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-              GripWise Saathi <span className="text-orange-400 font-medium">Advocacy Hub</span>
+              Mechanic Growth
             </h1>
             <p className="text-sm text-[hsl(var(--color-text-muted))] max-w-2xl leading-relaxed">
-              Empowering two-wheeler workshop mechanics through certified tyre engineering knowledge, transparent
-              participation recognition, physical diagnostic tracking, and trusted customer follow-ups.
+              Build your professional profile, learn practical tyre-care topics, record consented service activity, and
+              follow up with customers who have agreed to reminders. Recognition reflects activity recorded in GripWise;
+              it is not a certification.
             </p>
           </div>
 
@@ -282,8 +334,8 @@ export default function GripWiseSaathiPortal() {
               onClick={() => setShowRulesModal(true)}
               className="btn-secondary text-xs flex items-center gap-2 py-2"
             >
-              <HelpCircle className="h-4 w-4 text-orange-400" />
-              Scoring &amp; Ethics Rules
+              <HelpCircle className="h-4 w-4 text-blue-400" />
+              Recognition Rules
             </button>
             <button
               onClick={handleRefresh}
@@ -314,8 +366,8 @@ export default function GripWiseSaathiPortal() {
               : "text-[hsl(var(--color-text-muted))] hover:text-white"
           }`}
         >
-          <Award className="h-4 w-4 text-orange-400" />
-          Overview &amp; Badges
+          <Award className="h-4 w-4 text-blue-400" />
+          Overview &amp; Recognition
         </button>
 
         <button
@@ -375,23 +427,23 @@ export default function GripWiseSaathiPortal() {
           )}
         </button>
 
-        <button
-          onClick={() => setActiveTab("eurogrip_concept")}
+        {partnerProgrammesEnabled && <button
+          onClick={() => setActiveTab("partner_programmes")}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold whitespace-nowrap transition-all ${
-            activeTab === "eurogrip_concept"
+            activeTab === "partner_programmes"
               ? "bg-[hsl(var(--color-surface-3))] text-white border border-[hsl(var(--color-border))] shadow-sm"
               : "text-[hsl(var(--color-text-muted))] hover:text-white"
           }`}
         >
           <Layers className="h-4 w-4 text-purple-400" />
-          Eurogrip TORQ 4.0 Concept
-        </button>
+          Partner Programmes
+        </button>}
       </div>
 
       {loading ? (
         <div className="py-20 text-center text-[hsl(var(--color-text-muted))]">
           <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-3 text-orange-400" />
-          Loading GripWise Saathi Advocacy Data...
+          Loading Mechanic Growth data...
         </div>
       ) : (
         <>
@@ -412,7 +464,7 @@ export default function GripWiseSaathiPortal() {
                           stats.tier
                         )}`}
                       >
-                        {stats.tier}
+                      {formatTier(stats.tier)}
                       </span>
                     </div>
                     <div className="flex items-baseline gap-2 mb-1">
@@ -421,8 +473,8 @@ export default function GripWiseSaathiPortal() {
                     </div>
                     <p className="text-xs text-[hsl(var(--color-text-muted))] mt-1">
                       {stats.next_tier
-                        ? `${stats.points_to_next_tier} points to unlock ${stats.next_tier}`
-                        : "Maximum Master Tier Achieved!"}
+                        ? `${stats.points_to_next_tier} points to the next tier (${formatTier(stats.next_tier)})`
+                        : "Highest participation tier reached"}
                     </p>
                   </div>
 
@@ -448,7 +500,7 @@ export default function GripWiseSaathiPortal() {
                   <div>
                     <div className="flex items-center justify-between mb-3">
                       <span className="text-xs uppercase font-bold tracking-wider text-[hsl(var(--color-text-muted))]">
-                        Workshop Verification
+                        Profile Completeness
                       </span>
                       <span
                         className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${
@@ -468,13 +520,16 @@ export default function GripWiseSaathiPortal() {
 
                   <div className="mt-4 pt-4 border-t border-[hsl(var(--color-border))] flex items-center justify-between">
                     <span className="text-xs text-[hsl(var(--color-text-muted))]">
-                      {stats.profile_completeness_percent >= 80 ? "Verified Workshop" : "Incomplete profile"}
+                      {stats.profile_completeness_percent >= 80 ? "Profile completion award earned" : "Some details are still missing"}
                     </span>
                     <button
-                      onClick={() => setActiveTab("profile")}
+                      onClick={() => {
+                        setActiveTab("profile");
+                        setShowProfileModal(true);
+                      }}
                       className="text-xs font-semibold text-orange-400 hover:text-orange-300 flex items-center gap-1"
                     >
-                      Complete Profile &rarr;
+                      Review missing details &rarr;
                     </button>
                   </div>
                 </div>
@@ -483,7 +538,7 @@ export default function GripWiseSaathiPortal() {
                 <div className="card flex flex-col justify-between">
                   <div>
                     <span className="text-xs uppercase font-bold tracking-wider text-[hsl(var(--color-text-muted))] block mb-3">
-                      Verifiable Actions Logged
+                      Recorded Activity
                     </span>
                     <div className="grid grid-cols-2 gap-3 text-center">
                       <div className="p-2.5 rounded-xl bg-[hsl(var(--color-surface-3))] border border-[hsl(var(--color-border))]">
@@ -492,7 +547,7 @@ export default function GripWiseSaathiPortal() {
                       </div>
                       <div className="p-2.5 rounded-xl bg-[hsl(var(--color-surface-3))] border border-[hsl(var(--color-border))]">
                         <div className="text-xl font-bold text-white">{stats.verified_findings_count}</div>
-                        <div className="text-[11px] text-[hsl(var(--color-text-muted))]">Findings Logged</div>
+                        <div className="text-[11px] text-[hsl(var(--color-text-muted))]">Physical Findings</div>
                       </div>
                       <div className="p-2.5 rounded-xl bg-[hsl(var(--color-surface-3))] border border-[hsl(var(--color-border))]">
                         <div className="text-xl font-bold text-white">{stats.recorded_services_count}</div>
@@ -516,10 +571,10 @@ export default function GripWiseSaathiPortal() {
                   <div>
                     <h2 className="text-lg font-bold text-white flex items-center gap-2">
                       <Award className="h-5 w-5 text-orange-400" />
-                      Participation Badges &amp; Recognition
+                      Activity Recognition
                     </h2>
                     <p className="text-xs text-[hsl(var(--color-text-muted))]">
-                      Earned through real technical training, inspection diligence, and ethical recommendations.
+                      Earned through recorded learning and service activity. These progress markers are not independent certifications.
                     </p>
                   </div>
                   <span className="text-xs font-semibold px-3 py-1 rounded-full bg-orange-500/10 text-orange-300 border border-orange-500/20">
@@ -549,7 +604,9 @@ export default function GripWiseSaathiPortal() {
                         </div>
                         <div className="space-y-1 flex-1">
                           <div className="flex items-center justify-between">
-                            <h4 className="font-bold text-sm text-white">{badge.title}</h4>
+                            <h4 className="font-bold text-sm text-white">
+                              {badgeLabels[badge.id]?.title ?? formatBadgeLabel(badge.title)}
+                            </h4>
                             {badge.earned ? (
                               <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-500/20 text-green-300 font-semibold uppercase">
                                 Unlocked
@@ -560,14 +617,16 @@ export default function GripWiseSaathiPortal() {
                               </span>
                             )}
                           </div>
-                          <p className="text-xs text-[hsl(var(--color-text-muted))]">{badge.description}</p>
+                          <p className="text-xs text-[hsl(var(--color-text-muted))]">
+                            {badgeLabels[badge.id]?.description ?? badge.description}
+                          </p>
                           <div className="text-[11px] text-orange-400/80 pt-1">
                             <span className="font-medium text-[hsl(var(--color-text-muted))]">Criteria: </span>
-                            {badge.criteria_description}
+                            {badgeLabels[badge.id]?.criteria ?? badge.criteria_description}
                           </div>
                           {badge.earned && badge.earned_at && (
                             <div className="text-[10px] text-[hsl(var(--color-text-muted))] pt-1">
-                              Awarded: {new Date(badge.earned_at).toLocaleDateString()}
+                              Awarded: {formatDate(badge.earned_at)}
                             </div>
                           )}
                         </div>
@@ -628,9 +687,9 @@ export default function GripWiseSaathiPortal() {
                   <strong className="block text-sm text-blue-200 mb-0.5">
                     Technical Guidance &amp; Integrity Notice
                   </strong>
-                  Educational modules provide general tyre engineering guidance based on ISO 4223, ETRTO, and
-                  established two-wheeler maintenance practices. They do not constitute official Eurogrip
-                  certifications, warranties, or endorsements. Points and badges reflect educational quiz completion.
+                  Educational modules provide general tyre-care guidance based on engineering references and
+                  established two-wheeler maintenance practices. They are learning materials, not professional
+                  certifications, warranties, or endorsements. Recognition reflects recorded quiz completion.
                 </div>
               </div>
 
@@ -700,8 +759,8 @@ export default function GripWiseSaathiPortal() {
                       Mechanic Professional Profile
                     </h2>
                     <p className="text-xs text-[hsl(var(--color-text-muted))] mt-1">
-                      Real workshop information stored in GripWise database. Higher completeness unlocks the Verified
-                      Workshop badge.
+                      Add accurate workshop details to make your profile more useful to riders. Profile completion
+                      recognition reflects the checklist only; it does not verify the workshop.
                     </p>
                   </div>
                   <button
@@ -709,7 +768,7 @@ export default function GripWiseSaathiPortal() {
                     className="btn-primary text-xs flex items-center gap-2 py-2"
                   >
                     <Wrench className="h-3.5 w-3.5" />
-                    Edit Profile Details
+                    {profile.completion_percent < 100 ? "Complete Profile Details" : "Edit Profile Details"}
                   </button>
                 </div>
 
@@ -732,6 +791,20 @@ export default function GripWiseSaathiPortal() {
                         style={{ width: `${profile.completion_percent}%` }}
                       />
                     </div>
+
+                    {profile.completion_percent < 100 && (
+                      <div className="rounded-xl border border-blue-500/25 bg-blue-500/5 p-3 text-xs text-[hsl(var(--color-text-muted))]">
+                        <p className="font-semibold text-blue-200">Next step: add the missing details you can confirm.</p>
+                        <p className="mt-1">You can leave anything unknown or private blank. No certifications or contact details are required unless you choose to add them.</p>
+                        <button
+                          type="button"
+                          onClick={() => setShowProfileModal(true)}
+                          className="mt-3 inline-flex items-center gap-1 font-semibold text-blue-300 hover:text-blue-200"
+                        >
+                          Complete missing details <ChevronRight className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    )}
 
                     <div className="space-y-2 pt-2 border-t border-[hsl(var(--color-border))]">
                       <span className="text-[11px] font-semibold text-[hsl(var(--color-text-muted))] uppercase">
@@ -782,7 +855,7 @@ export default function GripWiseSaathiPortal() {
                       <div className="p-4 rounded-xl bg-[hsl(var(--color-surface-3))] border border-[hsl(var(--color-border))]">
                         <span className="label">Specialization</span>
                         <div className="font-semibold text-white text-sm">
-                          {profile.specialization || "General Two-Wheeler Mechanic"}
+                          {profile.specialization || "Not provided"}
                         </div>
                       </div>
 
@@ -800,7 +873,7 @@ export default function GripWiseSaathiPortal() {
                     <div className="p-4 rounded-xl bg-[hsl(var(--color-surface-3))] border border-[hsl(var(--color-border))]">
                       <span className="label">Professional Bio &amp; Background</span>
                       <p className="text-sm text-[hsl(var(--color-text-muted))] leading-relaxed">
-                        {profile.bio || "No biography added yet. Click Edit Profile to tell riders about your experience."}
+                        {profile.bio || "No biography provided."}
                       </p>
                     </div>
                   </div>
@@ -886,7 +959,7 @@ export default function GripWiseSaathiPortal() {
                           <div className="text-xs text-[hsl(var(--color-text-muted))] flex flex-wrap gap-4 pt-0.5">
                             <span>Vehicle: <strong className="text-white">{r.vehicle_model}</strong></span>
                             <span>Need: <strong className="text-orange-400 capitalize">{r.tyre_need.replace(/_/g, " ").toLowerCase()}</strong></span>
-                            <span>Created: {new Date(r.created_at).toLocaleDateString()}</span>
+                            <span>Created: {formatDate(r.created_at)}</span>
                           </div>
 
                           {r.notes && (
@@ -930,30 +1003,25 @@ export default function GripWiseSaathiPortal() {
             </div>
           )}
 
-          {/* TAB 5: EUROGRIP TORQ CHALLENGE 4.0 CASE STUDY 4 CONCEPT */}
-          {activeTab === "eurogrip_concept" && (
+          {partnerProgrammesEnabled && activeTab === "partner_programmes" && (
             <div className="space-y-6">
               <div className="card space-y-6">
                 <div>
-                  <span className="text-xs font-bold text-orange-400 uppercase tracking-wider block mb-1">
-                    Strategic Concept Formulation
-                  </span>
+                  <span className="text-xs font-bold text-orange-400 uppercase tracking-wider block mb-1">Optional concepts</span>
                   <h2 className="text-2xl font-extrabold text-white">
-                    Eurogrip TORQ Challenge 4.0 &bull; Case Study 4 Solution Architecture
+                    Partner Programme Concepts
                   </h2>
                   <p className="text-xs text-[hsl(var(--color-text-muted))] mt-1 max-w-3xl leading-relaxed">
-                    How tyre brands can convert transactional, margin-discount mechanic relationships into
-                    accredited technical advocacy, professional dignity, and sustainable two-wheeler rider trust.
+                    Illustrative ideas for optional learning and workshop support that could be discussed with a future
+                    partner.
                   </p>
                 </div>
 
-                {/* Explicit Disclaimer */}
                 <div className="demo-banner">
                   <Info className="h-4 w-4 shrink-0" />
                   <span>
-                    <strong>Academic &amp; Case Study Disclaimer:</strong> GripWise Saathi is a proposed strategic
-                    programme designed for Eurogrip TORQ Challenge 4.0, Case Study 4. This prototype does not claim an
-                    official corporate partnership, funding, or existing contractual relationship with Eurogrip.
+                    <strong>Proposal only:</strong> These ideas are not approved offers. GripWise has no confirmed
+                    manufacturer partnership, sponsorship, funding, or accreditation programme.
                   </span>
                 </div>
 
@@ -965,9 +1033,7 @@ export default function GripWiseSaathiPortal() {
                     </div>
                     <h4 className="font-bold text-white text-sm">Professional Empowerment</h4>
                     <p className="text-xs text-[hsl(var(--color-text-muted))] leading-relaxed">
-                      Move away from transactional scratch-card discounts. Provide mechanics with structured tyre
-                      knowledge, diagnostics tools, and verified digital credentials that enhance their standing with
-                      local riders.
+                      Offer optional access to structured tyre-care learning and practical diagnostic resources.
                     </p>
                   </div>
 
@@ -975,11 +1041,10 @@ export default function GripWiseSaathiPortal() {
                     <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400 font-bold mb-2">
                       2
                     </div>
-                    <h4 className="font-bold text-white text-sm">Evidence-Based Advocacy</h4>
+                    <h4 className="font-bold text-white text-sm">Evidence-Based Service</h4>
                     <p className="text-xs text-[hsl(var(--color-text-muted))] leading-relaxed">
-                      Equip workshops with precision depth gauges and digital inspection audits. When recommendations
-                      are rooted in verifiable millimetre depth and PSI data, riders trust the advice and choose quality
-                      tyres willingly.
+                      Potential workshop tools could help mechanics record physical tread-depth and pressure readings
+                      alongside rider-authorized inspection history.
                     </p>
                   </div>
 
@@ -987,21 +1052,19 @@ export default function GripWiseSaathiPortal() {
                     <div className="w-9 h-9 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400 font-bold mb-2">
                       3
                     </div>
-                    <h4 className="font-bold text-white text-sm">Ethical Loyalty &amp; Retention</h4>
+                    <h4 className="font-bold text-white text-sm">Customer Trust</h4>
                     <p className="text-xs text-[hsl(var(--color-text-muted))] leading-relaxed">
-                      Prevent brand bias fatigue. Mechanics recommend products matched to rider riding conditions (daily
-                      commute vs monsoon grip) while retaining transparent audit trails on the rider&apos;s mobile phone.
+                      Keep recommendations tied to rider needs and make follow-up consent visible in the service record.
                     </p>
                   </div>
                 </div>
 
-                {/* Proposed Tool Support & Brand Education Initiatives */}
                 <div className="space-y-4 pt-4 border-t border-[hsl(var(--color-border))]">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="font-bold text-lg text-white">Proposed Programme Initiatives</h3>
+                      <h3 className="font-bold text-lg text-white">Illustrative support ideas</h3>
                       <p className="text-xs text-[hsl(var(--color-text-muted))]">
-                        Configurable initiatives that a tyre manufacturer can sponsor for accredited workshops.
+                        Concepts only. There are no confirmed offers, sponsors, or eligibility commitments.
                       </p>
                     </div>
                     <span className="text-xs px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-semibold border border-purple-500/30">
@@ -1020,7 +1083,7 @@ export default function GripWiseSaathiPortal() {
                             {init.category.replace(/_/g, " ")}
                           </span>
                           <span className="text-[11px] text-[hsl(var(--color-text-muted))]">
-                            Eligible at: <strong className="text-white">{init.eligibility_level} Tier</strong>
+                            Example level: <strong className="text-white">{formatTier(init.eligibility_level)}</strong>
                           </span>
                         </div>
                         <h4 className="font-bold text-sm text-white">{init.title}</h4>
@@ -1040,6 +1103,12 @@ export default function GripWiseSaathiPortal() {
                       </div>
                     ))}
                   </div>
+                  {partnerProgrammesError && (
+                    <p className="text-sm text-amber-300" role="status">{partnerProgrammesError}</p>
+                  )}
+                  {initiatives.length === 0 && !partnerProgrammesError && (
+                    <p className="text-sm text-[hsl(var(--color-text-muted))]">No concept examples are configured.</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -1106,7 +1175,7 @@ export default function GripWiseSaathiPortal() {
                 <label className="label">Contact Phone</label>
                 <input
                   type="tel"
-                  placeholder="+91 98765 43210"
+                  placeholder="Optional workshop contact number"
                   value={profileForm.phone}
                   onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
                   className="input"
@@ -1174,8 +1243,7 @@ export default function GripWiseSaathiPortal() {
             <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-300 text-xs flex items-center gap-2">
               <Info className="h-4 w-4 shrink-0" />
               <span>
-                <strong>Verified Technical Basis:</strong> {selectedModule.technical_source} (General engineering
-                standard).
+                <strong>Reference:</strong> {selectedModule.technical_source} (General engineering source).
               </span>
             </div>
 
@@ -1209,12 +1277,12 @@ export default function GripWiseSaathiPortal() {
                   <p className="text-xs">
                     Score: <strong>{quizResult.score_percent}%</strong> &bull; Points Awarded:{" "}
                     <strong>+{quizResult.points_awarded}</strong> &bull; Current Tier:{" "}
-                    <strong>{quizResult.tier}</strong>
+                    <strong>{formatTier(quizResult.tier)}</strong>
                   </p>
                   {quizResult.newly_earned_badges.length > 0 && (
                     <div className="mt-2 pt-2 border-t border-green-500/30 text-xs text-green-300 flex items-center gap-1.5 font-semibold">
                       <Sparkles className="h-4 w-4" />
-                      New Badges Unlocked: {quizResult.newly_earned_badges.join(", ")}
+                      New Recognition Earned: {quizResult.newly_earned_badges.map(formatBadgeLabel).join(", ")}
                     </div>
                   )}
                 </div>
@@ -1319,7 +1387,7 @@ export default function GripWiseSaathiPortal() {
                 <label className="label">Customer Reference (Masked / First Name Only)</label>
                 <input
                   type="text"
-                  placeholder="e.g. Ramesh K. (avoid full confidential names)"
+                  placeholder="Use a minimal reference the customer has agreed to store"
                   value={referralForm.customer_name_masked}
                   onChange={(e) => setReferralForm({ ...referralForm, customer_name_masked: e.target.value })}
                   className="input"
@@ -1331,7 +1399,7 @@ export default function GripWiseSaathiPortal() {
                 <label className="label">Customer Phone (Masked Reference)</label>
                 <input
                   type="text"
-                  placeholder="e.g. +91 98*** **321"
+                  placeholder="Optional. Store only a masked reference."
                   value={referralForm.customer_phone_masked}
                   onChange={(e) => setReferralForm({ ...referralForm, customer_phone_masked: e.target.value })}
                   className="input"
@@ -1342,7 +1410,7 @@ export default function GripWiseSaathiPortal() {
                 <label className="label">Two-Wheeler Model</label>
                 <input
                   type="text"
-                  placeholder="e.g. Hero Splendor Plus, Bajaj Pulsar 150"
+                  placeholder="Vehicle model"
                   value={referralForm.vehicle_model}
                   onChange={(e) => setReferralForm({ ...referralForm, vehicle_model: e.target.value })}
                   className="input"
@@ -1368,7 +1436,7 @@ export default function GripWiseSaathiPortal() {
                 <label className="label">Technical Notes / Next Visit Target</label>
                 <textarea
                   rows={2}
-                  placeholder="e.g. Rear tyre tread 2.2mm, rider will return before monsoon in July..."
+                  placeholder="Only record agreed follow-up details needed for service."
                   value={referralForm.notes}
                   onChange={(e) => setReferralForm({ ...referralForm, notes: e.target.value })}
                   className="input"
@@ -1429,9 +1497,8 @@ export default function GripWiseSaathiPortal() {
             </div>
 
             <div className="p-3 rounded-xl bg-orange-500/10 border border-orange-500/30 text-orange-300 text-xs">
-              <strong>Zero Brand-Bias Rule:</strong> GripWise Saathi points are awarded strictly for verifiable technical
-              diligence, education, and genuine customer care. Mechanics are never rewarded for pushing any specific
-              brand regardless of rider needs.
+              <strong>Recognition rules:</strong> GripWise awards points for recorded learning, service activity, and
+              customer follow-ups. It does not reward product recommendations or sales.
             </div>
 
             <div className="space-y-3">

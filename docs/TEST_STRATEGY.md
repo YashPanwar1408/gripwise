@@ -1,6 +1,6 @@
 ﻿# GripWise — Test Strategy
 
-**Status:** PLANNED — not yet implemented
+**Status:** Planning reference. Current test coverage and execution results are recorded in [TEST_REPORT.md](TEST_REPORT.md).
 **Date:** 2026-10-10
 
 ---

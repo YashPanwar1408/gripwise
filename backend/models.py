@@ -185,7 +185,7 @@ class ServiceRecord(Base):
     mechanic: Mapped["User"] = relationship("User", foreign_keys=[mechanic_id])
 
 
-# ─────────────────────────── GripWise Saathi Engagement Models ───────────────────────────
+# ─────────────────────────── Mechanic Growth Models ───────────────────────────
 
 class MechanicProfile(Base):
     __tablename__ = "mechanic_profiles"
@@ -274,7 +274,7 @@ class CustomerReferral(Base):
     vehicle_model: Mapped[str] = mapped_column(String(100), nullable=False)
     tyre_need: Mapped[str] = mapped_column(String(50), nullable=False)  # REPLACEMENT_INSPECTION, PRESSURE_CHECK, PUNCTURE_FOLLOWUP, TREAD_WEAR_MONITORING
     status: Mapped[str] = mapped_column(String(30), default="PENDING", nullable=False)  # PENDING, CONTACTED, SERVICE_COMPLETED, EXPIRED
-    consent_confirmed: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    consent_confirmed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     service_record_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("service_records.id"), nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

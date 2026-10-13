@@ -5,32 +5,31 @@ Uses SQLite in-memory for fast, dependency-free testing.
 No PostgreSQL required for tests.
 """
 import os
-os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///./test.db"
-os.environ["DATABASE_URL_SYNC"] = "sqlite:///./test.db"
+import tempfile
+from pathlib import Path
+from urllib.parse import quote
 os.environ["SECRET_KEY"] = "test-secret-key-do-not-use-in-production"
 os.environ["INFERENCE_PROVIDER"] = "mock"
-os.environ["IMAGE_DIR"] = "test_uploads"
+
+_TEST_RUNTIME = tempfile.TemporaryDirectory(prefix="gripwise-pytest-")
+_TEST_RUNTIME_PATH = Path(_TEST_RUNTIME.name)
+_TEST_DB_PATH = (_TEST_RUNTIME_PATH / "test.db").as_posix()
+os.environ["DATABASE_URL"] = f"sqlite+aiosqlite:///{quote(_TEST_DB_PATH, safe='/:')}"
+os.environ["DATABASE_URL_SYNC"] = f"sqlite:///{quote(_TEST_DB_PATH, safe='/:')}"
+os.environ["IMAGE_DIR"] = str(_TEST_RUNTIME_PATH / "test_uploads")
 
 import pytest
-import asyncio
 from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy import event
 
 from backend.main import app
-from backend.database import Base, get_db
+from backend.database import Base, engine as app_engine, get_db
 
 
-TEST_DB_URL = "sqlite+aiosqlite:///./test.db"
+TEST_DB_URL = os.environ["DATABASE_URL"]
 test_engine = create_async_engine(TEST_DB_URL, echo=False)
 TestSession = async_sessionmaker(test_engine, expire_on_commit=False)
-
-
-@pytest.fixture(scope="session")
-def event_loop():
-    loop = asyncio.new_event_loop()
-    yield loop
-    loop.close()
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -40,6 +39,9 @@ async def setup_db():
     yield
     async with test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
+    await test_engine.dispose()
+    await app_engine.dispose()
+    _TEST_RUNTIME.cleanup()
 
 
 @pytest.fixture

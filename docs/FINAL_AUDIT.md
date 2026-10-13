@@ -1,49 +1,32 @@
-# GripWise Final Project Audit & Completion Record
+# GripWise Completion and Verification Record
 
-**Date**: 2026-10-10
-**Auditor**: Antigravity (Principal SWE)
+**Date:** 2026-10-13
+**Status:** Local demo workflows and the listed checks pass. GripWise remains a prototype, not a production-certified service.
 
-## Executive Summary
-GripWise is now an objectively complete, extremely robust, and hackathon-ready prototype. We have successfully pivoted from a collection of fragmented, untested scripts (from the provided reference repositories) into a cohesive, secure, and production-like architecture.
+## Completed in this workspace
 
-## 1. What Was Broken Before & What We Fixed
-- **Before**: The `tyreHealth` reference repository contained unsafe code execution, hardcoded file paths, and returned fabricated numeric percentages (e.g., "73% tread remaining"). The `BharatDrive-x-Twin` reference lacked a functioning, secure backend and assumed unverified IoT data.
-- **Fixed**: We stripped the unsafe AI logic, rewrote it behind a strict `InferenceProvider` interface, and replaced the hallucinated metrics with qualitative feedback ("Monitor Closely"). 
-- **Before**: The mechanic workflow existed only in documentation.
-- **Fixed**: We implemented the **entire** Phase 3 lifecycle. This includes the database schemas, the FastAPI routes (`/api/mechanic/*`), and the React Next.js screens (Consent Management, Mechanic Dashboard, and Mechanic Findings UI).
+- Kept the rider and mechanic workflows and presented mechanic learning, profile, and recognition features under the neutral **Mechanic Growth** name.
+- Hid partner programme concepts by default in both the backend and frontend. Enabling the two explicit feature flags reveals proposal examples only.
+- Required affirmative customer consent before a follow-up can be saved; the API, schema, and database defaults now deny consent unless confirmed.
+- Added the missing consent and workshop tables to the Alembic chain before the mechanic engagement migration.
+- Kept browser-token authenticated report pages client rendered. Their Next.js instant-navigation validation is opted out because those pages intentionally wait for browser authentication and API data.
+- Added demo and local run instructions, including where a mechanic copies their Workshop ID.
 
-## 2. Features Verified End-to-End
-1. **Rider Sign-Up & Vehicle Addition**: Seamless, role-enforced.
-2. **AI Inspection Submission**: Fast, async processing with loading states.
-3. **Data Security**: Riders exclusively own their inspection data.
-4. **Consent Handoff**: The Rider can generate a consent token allowing a specific mechanic to view their AI report.
-5. **Mechanic Verification**: A mechanic can securely review the AI's hypothesis and record a physical finding, which immediately reflects as a "Mechanic Verified" badge on the Rider's app.
+## Validation performed
 
-## 3. Actual Test Results
-- **Backend Tests**: `22/22 Passed`
-- **AI/ML Pipeline Tests**: `14/14 Passed`
-- **Frontend Build**: `0 Errors` (Production Optimized via Next.js)
+| Check | Result |
+|---|---|
+| **pytest backend/tests ai/tests -v** | 44 passed |
+| **npm run build** in frontend | Exit 0; TypeScript and Next.js production build passed |
+| Alembic on a disposable PostgreSQL 16 database | All four revisions applied; current reported 003_followup_consent_default (head); repeated upgrade head succeeded |
+| **git diff --check** | Passed; Git only reported its normal LF-to-CRLF notices |
 
-## 4. AI Inference Status
-- We implemented and verified a **Mock Provider** that safely emulates the AI output for seamless presentation during the hackathon. 
-- The real **OpenCV/YOLO** provider is structurally sound and unit-tested for image-quality rejection, but the heavy deep-learning weights were deliberately excluded to maintain integrity and prevent deployment bloat.
+The pytest fixture uses its own temporary SQLite database and upload folder. The repository's test.db was not modified. The PostgreSQL migration check used a volume-free disposable container that was removed afterward.
 
-## 5. Known Limitations
-- The application currently utilizes SQLite and local file storage. Moving to AWS/GCP would require swapping the SQLAlchemy dialect and redirecting image uploads to an S3-compatible blob store.
-- Telemetry prediction (remaining tyre lifespan) is disabled due to the lack of genuine IoT sensor hardware.
+## Demo setup
 
-## 6. Execution Commands
-To immediately launch the final, polished application:
-**Backend** (Run from project root):
-```bash
-python -m uvicorn backend.main:app --reload
-```
-**Frontend**:
-```bash
-cd frontend
-npm run dev
-```
+Use the commands in [README.md](../README.md) and the walkthrough in [DEMO_GUIDE.md](DEMO_GUIDE.md). The default inspection provider is mock; its output is simulated and is labeled as a demo. A test/demo mechanic ID is the UUID displayed as **Workshop ID** on the mechanic dashboard. A rider grants access by pasting that complete UUID into **Mechanic Access**.
 
-## 7. Next Recommended Action
-**Rehearse the Demo.**
-The system is locked-in. Follow the `docs/DEMO_SCRIPT.md` narrative. You can confidently present GripWise to the judges knowing the application is structurally flawless, data-secure, and directly addresses the core goals of the Tata Imagination and Eurogrip TORQ challenges.
+## Limits
+
+These checks do not certify production security, real-world tyre-analysis accuracy, or live partner offers. Review [KNOWN_LIMITATIONS.md](KNOWN_LIMITATIONS.md) before presenting the prototype.

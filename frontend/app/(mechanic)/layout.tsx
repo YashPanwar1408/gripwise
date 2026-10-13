@@ -7,7 +7,7 @@ import { LogOut, Wrench, Award, ClipboardList } from "lucide-react";
 
 function MechanicNavLinks() {
   const pathname = usePathname();
-  const isSaathi = pathname?.startsWith("/mechanic/saathi");
+  const isGrowth = pathname?.startsWith("/mechanic/saathi");
   const isQueue = pathname?.startsWith("/mechanic/dashboard") || pathname?.startsWith("/mechanic/inspections");
 
   return (
@@ -27,16 +27,13 @@ function MechanicNavLinks() {
         <Link
           href="/mechanic/saathi"
           className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium transition-all ${
-            isSaathi
-              ? "bg-orange-500/15 text-orange-300 border border-orange-500/40 shadow-sm shadow-orange-500/10"
+            isGrowth
+              ? "bg-blue-500/15 text-blue-300 border border-blue-500/40 shadow-sm shadow-blue-500/10"
               : "text-[hsl(var(--color-text-muted))] hover:text-white hover:bg-[hsl(var(--color-surface-2))]"
           }`}
         >
-          <Award className="h-4 w-4 text-orange-400" />
-          <span>GripWise Saathi</span>
-          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-orange-500/30 text-orange-200 uppercase tracking-wider font-semibold">
-            Advocacy
-          </span>
+          <Award className="h-4 w-4 text-blue-400" />
+          <span>Mechanic Growth</span>
         </Link>
       </nav>
 
@@ -54,11 +51,11 @@ function MechanicNavLinks() {
         <Link
           href="/mechanic/saathi"
           className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-medium rounded-lg ${
-            isSaathi ? "bg-orange-600 text-white" : "text-[hsl(var(--color-text-muted))]"
+            isGrowth ? "bg-blue-600 text-white" : "text-[hsl(var(--color-text-muted))]"
           }`}
         >
           <Award className="h-3.5 w-3.5" />
-          GripWise Saathi
+          Mechanic Growth
         </Link>
       </div>
     </>
@@ -75,7 +72,9 @@ export default function MechanicLayout({ children }: { children: React.ReactNode
     }
   }, [user, loading, router]);
 
-  if (loading || !user || user.role !== "MECHANIC") return null;
+  if (!loading && (!user || user.role !== "MECHANIC")) {
+    return <div className="p-8 text-center" role="status">Redirecting to sign in...</div>;
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-[hsl(var(--color-surface))]">
@@ -102,18 +101,20 @@ export default function MechanicLayout({ children }: { children: React.ReactNode
           <div className="flex items-center gap-5">
             <div className="hidden sm:flex flex-col text-right">
               <span className="text-xs text-[hsl(var(--color-text-muted))]">Authorized Workshop</span>
-              <span className="font-medium text-sm text-white">{user.display_name}</span>
+              <span className="font-medium text-sm text-white">{user?.display_name ?? "Restoring account..."}</span>
             </div>
-            <button
-              onClick={() => {
-                logout();
-                router.push("/login");
-              }}
-              className="text-[hsl(var(--color-text-muted))] hover:text-white transition-colors flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-[hsl(var(--color-border))] hover:bg-[hsl(var(--color-surface-2))]"
-            >
-              <LogOut className="h-3.5 w-3.5" />
-              Sign Out
-            </button>
+            {user && (
+              <button
+                onClick={() => {
+                  logout();
+                  router.push("/login");
+                }}
+                className="text-[hsl(var(--color-text-muted))] hover:text-white transition-colors flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-[hsl(var(--color-border))] hover:bg-[hsl(var(--color-surface-2))]"
+              >
+                <LogOut className="h-3.5 w-3.5" />
+                Sign Out
+              </button>
+            )}
           </div>
         </div>
       </header>

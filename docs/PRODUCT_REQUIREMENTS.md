@@ -1,6 +1,6 @@
 ﻿# GripWise — Product Requirements
 
-**Status:** PLANNED — not yet implemented
+**Status:** Planning baseline. Current implementation is tracked in [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md).
 **Date:** 2026-10-10
 **Version:** 0.1
 
@@ -18,7 +18,7 @@ All features below are PLANNED unless explicitly marked otherwise.
 | Preventive maintenance | Riders with inspection history receive relevant, rule-based maintenance reminders |
 | Mechanic engagement | Mechanics can record verified findings and build a traceable service history |
 | Rider trust | Every AI output is labelled with confidence and uncertainty; no unsupported guarantees |
-| Brand engagement (TORQ) | Repeat inspection usage and mechanic participation are measurable and improving |
+| Mechanic engagement | Mechanics can build a useful profile, complete learning activities, and record consented follow-ups |
 
 ### 1.2 Anti-Goals
 

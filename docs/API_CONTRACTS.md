@@ -203,8 +203,8 @@ Register a tyre position.
 ```json
 {
   "position": "FRONT",
-  "brand": "Eurogrip",
-  "model_name": "Bee Connect",
+  "brand": "Example manufacturer",
+  "model_name": "Example commuter tyre",
   "size_spec": "90/90-12",
   "installed_at": "2026-03-15",
   "installed_km": 14200
@@ -219,8 +219,8 @@ Register a tyre position.
     "tyre_position_id": "uuid",
     "vehicle_id": "uuid",
     "position": "FRONT",
-    "brand": "Eurogrip",
-    "model_name": "Bee Connect",
+    "brand": "Example manufacturer",
+    "model_name": "Example commuter tyre",
     "size_spec": "90/90-12",
     "installed_at": "2026-03-15",
     "installed_km": 14200

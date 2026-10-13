@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { vehiclesApi } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
@@ -7,8 +7,13 @@ import { useAuth } from "@/lib/auth-context";
 export default function NewVehicle() {
   const router = useRouter();
   const { user } = useAuth();
+  const [currentYear, setCurrentYear] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    setCurrentYear(new Date().getFullYear());
+  }, []);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -74,7 +79,7 @@ export default function NewVehicle() {
           </div>
           <div>
             <label className="label">Year (Optional)</label>
-            <input name="year" type="number" min="1990" max={new Date().getFullYear()} className="input" placeholder="2023" />
+            <input name="year" type="number" min="1990" max={currentYear ?? undefined} className="input" placeholder="2023" />
           </div>
         </div>
 

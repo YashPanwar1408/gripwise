@@ -1,9 +1,9 @@
-"""GripWise Saathi — Seed content and educational modules for mechanic advocacy.
+"""Seed content for Mechanic Growth learning and optional partner concepts.
 
 Includes:
 - Standard curriculum modules with verified engineering guidance (ISO/ETRTO standards)
 - Standard badges catalogue
-- Proposed Eurogrip TORQ Challenge 4.0 Case Study 4 initiatives
+- Proposal-only partner programme examples, shown only when enabled
 """
 from typing import List, Dict, Any
 
@@ -107,7 +107,7 @@ It is not the rubber that carries the weight of the motorcycle and rider — it 
 - Inspect the valve core and valve stem rubber for dry rot and micro-cracking.
 - Replace the valve cap with a sealing O-ring cap to prevent centrifugal deflation at high rotational speeds.
 
-> **Notice:** General tyre engineering guidance. Not an official Eurogrip endorsement.
+> **Notice:** General tyre engineering guidance. This material is not a manufacturer endorsement or professional certification.
 """,
         "technical_source": "Tyre and Rim Association (TRA) Standards on Inflation Pressure Dynamics",
         "points_reward": 50,
@@ -293,7 +293,7 @@ Surveys consistently show that riders trust local mechanics more than advertisem
                     "Recommend puncturing the tyre to install a patch"
                 ],
                 "correct_index": 1,
-                "explanation": "Ethical mechanics never fabricate urgency. Reassuring riders when equipment is safe earns genuine long-term advocacy and repeat visits."
+                "explanation": "Ethical mechanics never fabricate urgency. Reassuring riders when equipment is safe helps build long-term trust."
             }
         ]
     },
@@ -306,7 +306,7 @@ Surveys consistently show that riders trust local mechanics more than advertisem
         "summary": "Align tyre selection with rider usage, vehicle specs, and safety needs rather than commercial bias.",
         "content_markdown": """# Responsible Recommendations & Professional Ethics
 
-### Core Advocacy Principle
+### Core Professional Principle
 **A mechanic's first loyalty is to rider safety, mechanical compatibility, and truthful technical advice.**
 
 ### 1. Matching Tyre Characteristics to Rider Need
@@ -322,24 +322,24 @@ When advising riders on tyre replacement, match the product to their actual oper
 ### 3. Ethical Guardrails: Anti-Bias Standards
 - **Zero Commission Steering:** Never steer a rider toward an unsuitable tyre size or incompatible compound simply because a brand offers a higher dealer rebate.
 - **Transparent Options:** Present the rider with transparent choices based on their budget and riding conditions.
-- **GripWise Saathi Rule:** GripWise Saathi awards recognition points exclusively for educational completion, verified inspection accuracy, and customer service quality — **NEVER** for pushing a single brand regardless of customer fit.
+- **GripWise Recognition Rule:** GripWise awards recognition points for educational completion, recorded inspection findings, and customer service quality — **NEVER** for pushing a single brand regardless of customer fit.
 
-> **Notice:** Ethical engineering guidance. GripWise Saathi operates on transparent, non-coercive professional standards.
+> **Notice:** Ethical engineering guidance. GripWise uses transparent, non-coercive professional standards.
 """,
         "technical_source": "Society of Automotive Engineers (SAE) Code of Ethics & Tyre Application Safety",
         "points_reward": 50,
         "quiz_questions": [
             {
                 "id": 1,
-                "prompt": "What is the GripWise Saathi policy regarding brand recommendations and mechanic recognition?",
+                "prompt": "How does GripWise handle product recommendations and mechanic recognition?",
                 "options": [
                     "Mechanics earn double points for pushing a single designated brand regardless of vehicle spec",
-                    "Recognition points are strictly awarded for education, inspection accuracy, and verified service quality—never for biased brand pushing",
+                    "Recognition points are awarded for education, recorded findings, and service activity—not for biased brand pushing",
                     "Mechanics are penalized if they recommend any Indian tyre brand",
                     "Points are converted directly into mandatory tyre sales quotas"
                 ],
                 "correct_index": 1,
-                "explanation": "Ethical mechanic advocacy centers on technical competence and rider safety; rewarding arbitrary brand steering violates consumer trust."
+                "explanation": "Professional development centers on technical competence and rider safety; rewarding arbitrary brand steering violates consumer trust."
             },
             {
                 "id": 2,
@@ -372,9 +372,9 @@ When advising riders on tyre replacement, match the product to their actual oper
 SEED_BADGES: List[Dict[str, Any]] = [
     {
         "id": "BADGE_WELCOME",
-        "title": "Verified Workshop Saathi",
-        "description": "Completed workshop profile details with high data completeness.",
-        "criteria_description": "Achieve 80% or greater profile completeness by filling workshop name, city, address, experience, and contact details.",
+        "title": "Profile Complete",
+        "description": "Completed the workshop profile information checklist.",
+        "criteria_description": "Reach 80% or greater profile completeness using accurate workshop details.",
         "icon_name": "badge-check",
         "points_threshold": 0,
         "category": "PROFILE"
@@ -399,8 +399,8 @@ SEED_BADGES: List[Dict[str, Any]] = [
     },
     {
         "id": "BADGE_INSPECTION_PRO",
-        "title": "Physical Diagnostic Pro",
-        "description": "Verified physical inspections with recorded tread and pressure measurements.",
+        "title": "Physical Findings Recorder",
+        "description": "Recorded measurements during consented physical inspections.",
         "criteria_description": "Record physical findings (tread depth mm and pressure PSI) on 3 or more consented rider inspections.",
         "icon_name": "search",
         "points_threshold": 75,
@@ -408,8 +408,8 @@ SEED_BADGES: List[Dict[str, Any]] = [
     },
     {
         "id": "BADGE_SERVICE_CHAMPION",
-        "title": "Craftsman Service Champion",
-        "description": "Maintained verifiable, high-quality tyre service history records.",
+        "title": "Service Record Keeper",
+        "description": "Recorded completed tyre service work.",
         "criteria_description": "Log 3 or more completed tyre service records (tyre replacements, rotations, puncture repairs).",
         "icon_name": "wrench",
         "points_threshold": 90,
@@ -417,8 +417,8 @@ SEED_BADGES: List[Dict[str, Any]] = [
     },
     {
         "id": "BADGE_SAFETY_ADVOCATE",
-        "title": "Tyre Safety Guardian",
-        "description": "Championed unbiased consumer safety and ethical recommendations.",
+        "title": "Responsible Recommendations Learner",
+        "description": "Completed the learning module on responsible tyre recommendations.",
         "criteria_description": "Complete the 'Responsible Tyre Recommendations' ethics module and attain Silver Tier (100+ points) or above.",
         "icon_name": "shield-check",
         "points_threshold": 100,
@@ -429,30 +429,26 @@ SEED_BADGES: List[Dict[str, Any]] = [
 SEED_INITIATIVES: List[Dict[str, Any]] = [
     {
         "id": "INIT_DIGITAL_GAUGE",
-        "title": "Workshop Digital Tread Depth Gauge Initiative",
+        "title": "Workshop Digital Tread Depth Gauge",
         "category": "TOOL_SUPPORT",
-        "description": "Equipping partner workshops with calibrated digital tyre tread depth gauges (0.01 mm precision) to eliminate subjective guesswork and show riders exact wear data.",
+        "description": "A proposed workshop resource for recording physical tread measurements. Final device specifications would need supplier confirmation and validation.",
         "eligibility_level": "BRONZE",
         "status": "PROPOSED_CONCEPT",
         "tool_specs": {
-            "tool_type": "Precision Digital Depth Gauge",
-            "accuracy": "±0.01 mm",
-            "battery_life": "2 years",
-            "case_study_source": "Eurogrip TORQ Challenge 4.0 Case Study 4 (Proposed Concept)"
+            "tool_type": "Digital tread-depth gauge",
+            "specification": "To be confirmed with supplier and validated before use",
         }
     },
     {
         "id": "INIT_CALIBRATED_PRESSURE",
         "title": "Workshop Calibrated Air Pressure Station",
         "category": "TOOL_SUPPORT",
-        "description": "Supplying certified heavy-duty tyre pressure gauges with quarterly calibration checks, ensuring local mechanics provide laboratory-accurate PSI checks.",
+        "description": "A proposed workshop resource for checking tyre pressure. Gauge specifications and any calibration schedule would need supplier confirmation.",
         "eligibility_level": "SILVER",
         "status": "PROPOSED_CONCEPT",
         "tool_specs": {
-            "tool_type": "Certified Dial / Digital Pressure Gauge",
-            "accuracy": "±0.5 PSI",
-            "calibration_frequency": "Quarterly",
-            "case_study_source": "Eurogrip TORQ Challenge 4.0 Case Study 4 (Proposed Concept)"
+            "tool_type": "Dial or digital pressure gauge",
+            "specification": "To be confirmed with supplier and validated before use",
         }
     },
     {
@@ -464,21 +460,19 @@ SEED_INITIATIVES: List[Dict[str, Any]] = [
         "status": "PROPOSED_CONCEPT",
         "tool_specs": {
             "format": "Weatherproof Vinyl Wall Poster (3ft x 2ft)",
-            "languages": "English, Hindi, Tamil, Telugu, Kannada, Marathi",
-            "case_study_source": "Eurogrip TORQ Challenge 4.0 Case Study 4 (Proposed Concept)"
+            "languages": "To be selected for the workshop's local community"
         }
     },
     {
         "id": "INIT_TECH_CLINIC",
-        "title": "Two-Wheeler Compound & Grip Mechanics Masterclass",
-        "category": "BRAND_WORKSHOP",
-        "description": "Hands-on regional technical workshops covering polymer compound chemistry, silica tread behavior in tropical rain, and dynamic stability for two-wheelers.",
+        "title": "Two-Wheeler Tyre-Care Learning Session",
+        "category": "LEARNING_SESSION",
+        "description": "A proposed learning session covering tyre construction, tread condition, pressure checks, and safe service practices.",
         "eligibility_level": "GOLD",
         "status": "PROPOSED_CONCEPT",
         "tool_specs": {
-            "duration": "1-Day Regional Masterclass",
-            "hands_on_practical": "True",
-            "case_study_source": "Eurogrip TORQ Challenge 4.0 Case Study 4 (Proposed Concept)"
+            "duration": "To be planned with participating workshops",
+            "hands_on_practical": "Format to be agreed"
         }
     }
 ]
