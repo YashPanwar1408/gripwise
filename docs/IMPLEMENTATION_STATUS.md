@@ -23,8 +23,24 @@
 - Added comprehensive audit trails for mechanic actions.
 - Built Mechanic Dashboard and Rider Consent management UIs.
 - Integrated the "Mechanic Verified" badge and data display in the Rider Inspection Detail view.
-- **Evidence**: The entire workflow is covered and successfully verified by `test_mechanic.py`, and the Next.js frontend builds without errors.
+- **Evidence**: Covered by `test_mechanic.py`.
+
+## Phase 4: GripWise Saathi — Mechanic Advocacy & Engagement (Eurogrip TORQ 4.0, Case Study 4)
+**Status**: Completed (Backend & Frontend)
+- **Database Architecture**: Added tables for `mechanic_profiles`, `learning_modules`, `mechanic_module_completions`, `mechanic_badges`, `mechanic_earned_badges`, `customer_referrals`, and `saathi_program_initiatives`.
+- **Database Migration**: Added Alembic revision `002_saathi_engagement.py`.
+- **Backend Endpoints (`/api/saathi`)**:
+  - `GET /api/saathi/dashboard`: Real aggregated metrics, tier, points, profile completion, badge status.
+  - `GET /api/saathi/profile` & `PUT /api/saathi/profile`: Mechanic workshop profile and dynamic completeness calculation.
+  - `GET /api/saathi/learning/modules` & `GET /api/saathi/learning/modules/{id}`: Curriculum with 5 technical tyre-care modules and quizzes.
+  - `POST /api/saathi/learning/modules/{id}/quiz`: Technical quiz submission, automatic scoring (>=66% pass threshold), idempotent points reward (+50 points, no duplicates on retakes), and automated badge unlocking.
+  - `GET /api/saathi/badges`: Verifiable participation badges catalogue and earned status.
+  - `GET /api/saathi/referrals`, `POST /api/saathi/referrals`, & `PATCH /api/saathi/referrals/{id}`: Consent-aware customer follow-up tracking with privacy protection and status transitions.
+  - `GET /api/saathi/initiatives`: Proposed Eurogrip TORQ Challenge 4.0 tool-support and brand education initiatives.
+- **Role Authorization & Isolation**: Strictly enforced `require_mechanic` (403 for non-mechanics); tenant isolation guarantees mechanics only access their own records.
+- **Frontend Portal (`/mechanic/saathi`)**: Built tabbed advocacy dashboard, learning hub with quiz modal and instant grading feedback, profile editor, customer follow-up manager, and Eurogrip TORQ 4.0 strategic concept explorer.
+- **Evidence**: 7 dedicated automated tests in `test_saathi.py` (all 29 backend tests pass) and Next.js 16 production build compiles with zero errors.
 
 ## Outstanding Deferred Features
-- **CNN Classifier Model**: Excluded due to missing weights and lack of provenance. 
+- **CNN Classifier Model**: Excluded due to missing weights and lack of provenance in reference repos.
 - **Lifespan Prediction**: Dropped due to lack of real telemetry data.

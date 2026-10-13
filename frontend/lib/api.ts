@@ -1,5 +1,22 @@
 // GripWise Frontend — Typed API client
-import type { ApiResponse, TokenResponse, Vehicle, TyrePosition, Inspection, ConsentRecord, MechanicFinding, ServiceRecord } from "./types";
+import type {
+  ApiResponse,
+  TokenResponse,
+  Vehicle,
+  TyrePosition,
+  Inspection,
+  ConsentRecord,
+  MechanicFinding,
+  ServiceRecord,
+  MechanicProfile,
+  LearningModuleSummary,
+  LearningModuleDetail,
+  QuizResult,
+  MechanicBadge,
+  CustomerReferral,
+  SaathiDashboardStats,
+  SaathiProgramInitiative,
+} from "./types";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -145,6 +162,69 @@ export const mechanicApi = {
     request<MechanicFinding>(`/api/mechanic/inspections/${inspectionId}/findings`, { method: "POST", body: JSON.stringify(body) }, token),
   addServiceRecord: (token: string, body: any) =>
     request<ServiceRecord>("/api/mechanic/service-records", { method: "POST", body: JSON.stringify(body) }, token),
+};
+
+// ── GripWise Saathi API ───────────────────────────────────────────
+
+export const saathiApi = {
+  getDashboard: (token: string) =>
+    request<SaathiDashboardStats>("/api/saathi/dashboard", {}, token),
+
+  getProfile: (token: string) =>
+    request<MechanicProfile>("/api/saathi/profile", {}, token),
+
+  updateProfile: (token: string, body: Partial<MechanicProfile>) =>
+    request<MechanicProfile>("/api/saathi/profile", { method: "PUT", body: JSON.stringify(body) }, token),
+
+  getModules: (token: string) =>
+    request<{ modules: LearningModuleSummary[] }>("/api/saathi/learning/modules", {}, token),
+
+  getModuleDetail: (token: string, moduleId: string) =>
+    request<LearningModuleDetail>(`/api/saathi/learning/modules/${moduleId}`, {}, token),
+
+  submitQuiz: (token: string, moduleId: string, answers: number[]) =>
+    request<QuizResult>(
+      `/api/saathi/learning/modules/${moduleId}/quiz`,
+      { method: "POST", body: JSON.stringify({ answers }) },
+      token
+    ),
+
+  getBadges: (token: string) =>
+    request<{ badges: MechanicBadge[] }>("/api/saathi/badges", {}, token),
+
+  getReferrals: (token: string) =>
+    request<{ referrals: CustomerReferral[] }>("/api/saathi/referrals", {}, token),
+
+  createReferral: (
+    token: string,
+    body: {
+      customer_name_masked: string;
+      customer_phone_masked?: string;
+      vehicle_model: string;
+      tyre_need: string;
+      notes?: string;
+      consent_confirmed?: boolean;
+    }
+  ) =>
+    request<CustomerReferral>("/api/saathi/referrals", { method: "POST", body: JSON.stringify(body) }, token),
+
+  updateReferral: (
+    token: string,
+    referralId: string,
+    body: { status: string; notes?: string; service_record_id?: string }
+  ) =>
+    request<CustomerReferral>(
+      `/api/saathi/referrals/${referralId}`,
+      { method: "PATCH", body: JSON.stringify(body) },
+      token
+    ),
+
+  getInitiatives: (token: string) =>
+    request<{ case_study: string; program_disclaimer: string; initiatives: SaathiProgramInitiative[] }>(
+      "/api/saathi/initiatives",
+      {},
+      token
+    ),
 };
 
 export { ApiError };

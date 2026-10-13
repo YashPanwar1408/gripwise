@@ -26,3 +26,13 @@ While GripWise is fundamentally robust and hackathon-ready, the following limita
 - **Description**: The `MOCK` AI provider is configured as the default for demonstration purposes.
 - **Reason**: Hardware constraints on presentation machines may prevent running OpenCV/YOLO inference in real-time.
 - **Impact**: When in mock mode, the system returns deterministic, safe fallback data. The real `CVProvider` can be activated by changing `INFERENCE_PROVIDER=cv` in `.env`, provided OpenCV and YOLO dependencies are available in the host environment.
+
+## 6. Eurogrip TORQ Challenge 4.0 Programme Scope
+- **Description**: The proposed tool-support initiatives (digital tread depth gauges, calibrated pressure stations, and brand masterclasses) are conceptual strategic proposals designed specifically for Case Study 4.
+- **Reason**: GripWise is a technology prototype and competition solution, not a corporate subsidiary of TVS Srichakra / Eurogrip.
+- **Impact**: The application deliberately makes no claims of existing commercial funding, inventory warehousing, dealer trade discounts, or official corporate sponsorships.
+
+## 7. Educational Content Scope & Privacy
+- **Description**: The Tyre-Care Learning Hub curriculum is grounded in open engineering standards (ISO 4223, ETRTO, BS AU 159, RMA guidelines) rather than proprietary manufacturer proprietary certifications.
+- **Reason**: Mechanics operate across diverse two-wheeler brands. General tyre engineering principles protect rider safety without brand bias.
+- **Impact**: Customer follow-up records use masked references (e.g. "Ramesh K.", "+91 98*** **321") to uphold strict personal data minimization and avoid storing unneeded customer PII.

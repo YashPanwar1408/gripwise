@@ -42,7 +42,7 @@ def create_app() -> FastAPI:
     )
     app.add_middleware(LoggingMiddleware)
 
-    from backend.api import auth, vehicles, inspections, health, mechanic, consent
+    from backend.api import auth, vehicles, inspections, health, mechanic, consent, saathi
 
     app.include_router(health.router, prefix="/api")
     app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
@@ -50,6 +50,7 @@ def create_app() -> FastAPI:
     app.include_router(inspections.router, prefix="/api/inspections", tags=["inspections"])
     app.include_router(mechanic.router, prefix="/api/mechanic", tags=["mechanic"])
     app.include_router(consent.router, prefix="/api/consent", tags=["consent"])
+    app.include_router(saathi.router, prefix="/api/saathi", tags=["saathi"])
 
     @app.exception_handler(Exception)
     async def generic_exception_handler(request, exc):

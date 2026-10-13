@@ -31,10 +31,30 @@ export default function MechanicDashboard() {
 
   return (
     <div className="space-y-6">
+      <div className="p-5 rounded-2xl border border-orange-500/30 bg-gradient-to-r from-orange-500/10 via-[hsl(var(--color-surface-2))] to-amber-500/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-start sm:items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-orange-500/20 border border-orange-500/40 flex items-center justify-center shrink-0">
+            <ShieldCheck className="h-5 w-5 text-orange-400" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="font-bold text-white text-base">GripWise Saathi — Mechanic Advocacy Hub</h3>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-300 font-semibold uppercase tracking-wider border border-orange-500/30">Eurogrip TORQ 4.0</span>
+            </div>
+            <p className="text-xs text-[hsl(var(--color-text-muted))] mt-0.5">
+              Complete accredited tyre-care modules, earn verifiable digital badges, and track customer follow-ups.
+            </p>
+          </div>
+        </div>
+        <Link href="/mechanic/saathi" className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-semibold text-xs transition-all shrink-0 shadow-lg shadow-orange-500/20">
+          Open Saathi Hub &rarr;
+        </Link>
+      </div>
+
       <div className="flex justify-between items-end">
         <div>
-          <h1 className="text-2xl font-bold mb-2">Service Queue</h1>
-          <p className="text-[hsl(var(--color-text-muted))]">Inspections authorized for your workshop.</p>
+          <h1 className="text-2xl font-bold mb-1">Service Queue</h1>
+          <p className="text-[hsl(var(--color-text-muted))] text-sm">Inspections authorized for your workshop by riders.</p>
         </div>
         <button onClick={loadInspections} className="btn-secondary flex items-center gap-2">
           <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />

@@ -40,21 +40,32 @@ This script provides a structured narrative designed to hit every judging criter
 - *Switch browsers or open an Incognito window.*
 - Log in as **MECHANIC** (Mike).
 
-## 2:00 - 2:40 | The Mechanic's Workspace & Verification
+## 2:00 - 2:30 | The Mechanic's Workspace & Verification
 **Narrator/Presenter**: 
 "On Mike's tablet, Rahul's vehicle instantly appears in the active queue. Mike can see the AI's preliminary findings, giving him immediate context. He physically inspects the tyre and confirms the wear is significant on the right side."
 
 **Action**:
-- As Mike, click on Rahul's inspection.
+- As Mike, click on Rahul's inspection in the Service Queue (`/mechanic/dashboard`).
 - Add a **Physical Finding**: "Tread depth at 1.8mm. Suggest replacement."
-- Log a **Service Record**: "Tyre Replaced - Eurogrip Pro".
+- Log a **Service Record**: "Tyre Replaced - OEM Compatible".
 
-## 2:40 - 3:00 | The Trust Loop & Conclusion
+## 2:30 - 3:15 | GripWise Saathi — Mechanic Advocacy & Engagement (Eurogrip TORQ 4.0)
 **Narrator/Presenter**:
-"Back on Rahul's phone, the inspection now carries a 'Mechanic Verified' badge. He can see the permanent service record in his vehicle's history. He revokes the temporary access, feeling completely in control of his data and confident in his purchase. This is GripWise: Explainable AI safety for the rider, verifiable engagement for the mechanic, and unshakeable trust for the brand. Thank you."
+"Now, let's explore **GripWise Saathi**, our dedicated mechanic advocacy module designed for Case Study 4. Instead of transactional cash discounts, Saathi empowers mechanics as recognized safety champions."
+
+**Action**:
+- Click on **GripWise Saathi** in the navigation header (`/mechanic/saathi`).
+- **Advocacy Dashboard**: Highlight Mike's real Engagement Points, his current **Participation Tier** (e.g. Bronze -> Silver), and unlocked digital badges like *Physical Diagnostic Pro* and *Verified Workshop*.
+- **Tyre-Care Learning Hub**: Open the module *"Tread Wear Patterns, TWI & Safety Limits"*. Show the plain-language technical guidance (ISO/ETRTO standards), answer the 3-question quiz, and watch the score (+50 points) and *Knowledge Pioneer* badge unlock instantly!
+- **Customer Follow-Ups**: Show the consent-aware follow-up tracker where Mike schedules upcoming monsoon tyre checks for his customers without collecting invasive personal data.
+- **Eurogrip TORQ 4.0 Concept**: Show the proposed tool-support initiatives (digital tread depth gauges and calibrated PSI stations) that a tyre brand can sponsor to elevate local workshops.
+
+## 3:15 - 3:30 | The Trust Loop & Conclusion
+**Narrator/Presenter**:
+"Back on Rahul's phone, the inspection carries a 'Mechanic Verified' badge and permanent service record. Rahul revokes temporary consent feeling in complete control. For Eurogrip, mechanics become passionate advocates driven by accredited pride and precision tools. This is GripWise Saathi: AI safety for riders, professional advocacy for mechanics, and lasting trust for the tyre brand. Thank you."
 
 **Action**:
 - Switch back to Rider (Rahul).
-- Show the "Verified" badge and Service History.
+- Show the "Mechanic Verified" badge and Service History.
 - Revoke Mechanic Access.
 - End Demo.

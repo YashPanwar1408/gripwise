@@ -33,6 +33,10 @@ class User(Base):
 
     vehicles: Mapped[list["Vehicle"]] = relationship("Vehicle", back_populates="owner")
     audit_events: Mapped[list["AuditEvent"]] = relationship("AuditEvent", back_populates="actor")
+    mechanic_profile: Mapped["MechanicProfile | None"] = relationship("MechanicProfile", back_populates="user", uselist=False)
+    module_completions: Mapped[list["MechanicModuleCompletion"]] = relationship("MechanicModuleCompletion", back_populates="mechanic")
+    earned_badges: Mapped[list["MechanicEarnedBadge"]] = relationship("MechanicEarnedBadge", back_populates="mechanic")
+    referrals: Mapped[list["CustomerReferral"]] = relationship("CustomerReferral", back_populates="mechanic")
 
 
 class Vehicle(Base):
@@ -179,3 +183,115 @@ class ServiceRecord(Base):
 
     tyre_position: Mapped["TyrePosition"] = relationship("TyrePosition", backref="service_records")
     mechanic: Mapped["User"] = relationship("User", foreign_keys=[mechanic_id])
+
+
+# ─────────────────────────── GripWise Saathi Engagement Models ───────────────────────────
+
+class MechanicProfile(Base):
+    __tablename__ = "mechanic_profiles"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_uuid)
+    user_id: Mapped[str] = mapped_column(String(36), ForeignKey("users.id"), unique=True, nullable=False)
+    years_experience: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    specialization: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    workshop_address: Mapped[str | None] = mapped_column(Text, nullable=True)
+    phone: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    bio: Mapped[str | None] = mapped_column(Text, nullable=True)
+    certifications: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    user: Mapped["User"] = relationship("User", back_populates="mechanic_profile")
+
+
+class LearningModule(Base):
+    __tablename__ = "learning_modules"
+
+    id: Mapped[str] = mapped_column(String(50), primary_key=True)
+    module_code: Mapped[str] = mapped_column(String(20), unique=True, nullable=False)
+    title: Mapped[str] = mapped_column(String(200), nullable=False)
+    category: Mapped[str] = mapped_column(String(50), nullable=False)  # INSPECTION, SAFETY, MAINTENANCE, COMMUNICATION, ETHICS
+    estimated_minutes: Mapped[int] = mapped_column(Integer, default=10, nullable=False)
+    summary: Mapped[str] = mapped_column(Text, nullable=False)
+    content_markdown: Mapped[str] = mapped_column(Text, nullable=False)
+    technical_source: Mapped[str] = mapped_column(String(255), nullable=False)
+    quiz_questions: Mapped[list] = mapped_column(JSON, nullable=False)
+    points_reward: Mapped[int] = mapped_column(Integer, default=50, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    completions: Mapped[list["MechanicModuleCompletion"]] = relationship("MechanicModuleCompletion", back_populates="module", cascade="all, delete-orphan")
+
+
+class MechanicModuleCompletion(Base):
+    __tablename__ = "mechanic_module_completions"
+    __table_args__ = (UniqueConstraint("mechanic_id", "module_id", name="uq_mechanic_module_completion"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_uuid)
+    mechanic_id: Mapped[str] = mapped_column(String(36), ForeignKey("users.id"), nullable=False)
+    module_id: Mapped[str] = mapped_column(String(50), ForeignKey("learning_modules.id"), nullable=False)
+    score_percent: Mapped[float] = mapped_column(Float, nullable=False)
+    passed: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    completed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    mechanic: Mapped["User"] = relationship("User", back_populates="module_completions")
+    module: Mapped["LearningModule"] = relationship("LearningModule", back_populates="completions")
+
+
+class MechanicBadge(Base):
+    __tablename__ = "mechanic_badges"
+
+    id: Mapped[str] = mapped_column(String(50), primary_key=True)
+    title: Mapped[str] = mapped_column(String(100), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    criteria_description: Mapped[str] = mapped_column(Text, nullable=False)
+    icon_name: Mapped[str] = mapped_column(String(50), nullable=False)
+    points_threshold: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    category: Mapped[str] = mapped_column(String(50), default="ACHIEVEMENT", nullable=False)
+
+    earned_by: Mapped[list["MechanicEarnedBadge"]] = relationship("MechanicEarnedBadge", back_populates="badge")
+
+
+class MechanicEarnedBadge(Base):
+    __tablename__ = "mechanic_earned_badges"
+    __table_args__ = (UniqueConstraint("mechanic_id", "badge_id", name="uq_mechanic_badge"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_uuid)
+    mechanic_id: Mapped[str] = mapped_column(String(36), ForeignKey("users.id"), nullable=False)
+    badge_id: Mapped[str] = mapped_column(String(50), ForeignKey("mechanic_badges.id"), nullable=False)
+    earned_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    mechanic: Mapped["User"] = relationship("User", back_populates="earned_badges")
+    badge: Mapped["MechanicBadge"] = relationship("MechanicBadge", back_populates="earned_by")
+
+
+class CustomerReferral(Base):
+    __tablename__ = "customer_referrals"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_uuid)
+    mechanic_id: Mapped[str] = mapped_column(String(36), ForeignKey("users.id"), nullable=False)
+    customer_name_masked: Mapped[str] = mapped_column(String(100), nullable=False)
+    customer_phone_masked: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    vehicle_model: Mapped[str] = mapped_column(String(100), nullable=False)
+    tyre_need: Mapped[str] = mapped_column(String(50), nullable=False)  # REPLACEMENT_INSPECTION, PRESSURE_CHECK, PUNCTURE_FOLLOWUP, TREAD_WEAR_MONITORING
+    status: Mapped[str] = mapped_column(String(30), default="PENDING", nullable=False)  # PENDING, CONTACTED, SERVICE_COMPLETED, EXPIRED
+    consent_confirmed: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    service_record_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("service_records.id"), nullable=True)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    mechanic: Mapped["User"] = relationship("User", back_populates="referrals")
+    service_record: Mapped["ServiceRecord | None"] = relationship("ServiceRecord")
+
+
+class SaathiProgramInitiative(Base):
+    __tablename__ = "saathi_program_initiatives"
+
+    id: Mapped[str] = mapped_column(String(50), primary_key=True)
+    title: Mapped[str] = mapped_column(String(150), nullable=False)
+    category: Mapped[str] = mapped_column(String(50), nullable=False)  # TOOL_SUPPORT, BRAND_WORKSHOP, SAFETY_SIGNAGE
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    eligibility_level: Mapped[str] = mapped_column(String(50), nullable=False)  # BRONZE, SILVER, GOLD, MASTER
+    status: Mapped[str] = mapped_column(String(50), default="PROPOSED_CONCEPT", nullable=False)
+    tool_specs: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

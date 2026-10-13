@@ -6,9 +6,15 @@ It bridges the gap between everyday riders and professional mechanics by providi
 
 ## Product Modules
 
-1. **Rider Workspace**: Register vehicles, upload tyre images for AI inspection, and review safety guidance.
-2. **Tyre Intelligence**: Pluggable AI inference supporting both deterministic MOCK modes for demos, and OpenCV pipelines for real image analysis.
-3. **Mechanic Workspace (Phase 3 Backend Ready)**: Riders can grant explicit consent for mechanics to view their AI reports and append verified physical findings (e.g., actual tread depth measurements, service records).
+1. **Rider Workspace**: Register vehicles, upload tyre images for AI inspection, review plain-language safety guidance, and manage mechanic consent.
+2. **Tyre Intelligence**: Pluggable AI inference supporting both deterministic MOCK modes for testing and OpenCV pipelines for tread proxy and anomaly detection.
+3. **Mechanic Workspace**: Consent-based service queue where mechanics review authorized rider inspections, document physical gauge measurements (depth mm, PSI), and record service history.
+4. **GripWise Saathi — Mechanic Advocacy & Engagement (Eurogrip TORQ Challenge 4.0, Case Study 4)**:
+   - **Professional Profile**: Stored workshop records with a real profile-completion indicator.
+   - **Tyre-Care Learning Hub**: 5 structured educational modules with interactive technical quizzes (ISO/ETRTO guidance; zero brand bias).
+   - **Verifiable Recognition & Badges**: Transparent participation tiers (Bronze, Silver, Gold, Master Saathi) and digital badges with deterministic, idempotent scoring.
+   - **Customer Engagement & Referrals**: Consent-aware customer tyre safety follow-up tracking with privacy preservation.
+   - **Eurogrip TORQ 4.0 Concept**: Proposed tool-support initiatives (digital tread depth gauges, calibrated tyre pressure stations, workshop safety wallcharts, and compound masterclasses).
 
 ## Architecture
 - **Frontend**: Next.js (App Router), React, Tailwind CSS, TypeScript.

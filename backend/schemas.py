@@ -257,3 +257,180 @@ class ServiceRecordOut(BaseModel):
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+# ─────────────────────────── GripWise Saathi Schemas ───────────────────────────
+
+class MechanicProfileUpdate(BaseModel):
+    years_experience: Optional[int] = None
+    specialization: Optional[str] = None
+    workshop_address: Optional[str] = None
+    phone: Optional[str] = None
+    bio: Optional[str] = None
+    certifications: Optional[List[str]] = None
+
+
+class MechanicProfileOut(BaseModel):
+    user_id: str
+    display_name: str
+    workshop_name: Optional[str]
+    workshop_city: Optional[str]
+    years_experience: Optional[int] = None
+    specialization: Optional[str] = None
+    workshop_address: Optional[str] = None
+    phone: Optional[str] = None
+    bio: Optional[str] = None
+    certifications: Optional[List[str]] = None
+    completion_percent: int
+    completion_checklist: dict
+
+    model_config = {"from_attributes": True}
+
+
+class QuizQuestion(BaseModel):
+    id: int
+    prompt: str
+    options: List[str]
+    correct_index: int
+    explanation: str
+
+
+class LearningModuleSummaryOut(BaseModel):
+    id: str
+    module_code: str
+    title: str
+    category: str
+    estimated_minutes: int
+    summary: str
+    points_reward: int
+    technical_source: str
+    completed: bool = False
+    score_percent: Optional[float] = None
+    completed_at: Optional[datetime] = None
+
+    model_config = {"from_attributes": True}
+
+
+class LearningModuleDetailOut(LearningModuleSummaryOut):
+    content_markdown: str
+    quiz_questions: List[QuizQuestion]
+
+
+class QuizSubmissionRequest(BaseModel):
+    answers: List[int]
+
+
+class QuizQuestionFeedback(BaseModel):
+    question_id: int
+    selected_index: int
+    correct_index: int
+    is_correct: bool
+    explanation: str
+
+
+class QuizResultOut(BaseModel):
+    module_id: str
+    score_percent: float
+    passed: bool
+    points_awarded: int
+    total_points: int
+    tier: str
+    newly_earned_badges: List[str]
+    feedback: List[QuizQuestionFeedback]
+
+
+class MechanicBadgeOut(BaseModel):
+    id: str
+    title: str
+    description: str
+    criteria_description: str
+    icon_name: str
+    category: str
+    points_threshold: Optional[int] = None
+    earned: bool = False
+    earned_at: Optional[datetime] = None
+
+    model_config = {"from_attributes": True}
+
+
+class CustomerReferralCreate(BaseModel):
+    customer_name_masked: str
+    customer_phone_masked: Optional[str] = None
+    vehicle_model: str
+    tyre_need: str  # REPLACEMENT_INSPECTION, PRESSURE_CHECK, PUNCTURE_FOLLOWUP, TREAD_WEAR_MONITORING
+    notes: Optional[str] = None
+    consent_confirmed: bool = True
+
+    @field_validator("customer_name_masked")
+    @classmethod
+    def validate_name(cls, v: str) -> str:
+        clean = v.strip()
+        if not clean:
+            raise ValueError("Customer reference name is required")
+        return clean
+
+
+class CustomerReferralUpdate(BaseModel):
+    status: str  # PENDING, CONTACTED, SERVICE_COMPLETED, EXPIRED
+    notes: Optional[str] = None
+    service_record_id: Optional[str] = None
+
+
+class CustomerReferralOut(BaseModel):
+    id: str
+    mechanic_id: str
+    customer_name_masked: str
+    customer_phone_masked: Optional[str] = None
+    vehicle_model: str
+    tyre_need: str
+    status: str
+    consent_confirmed: bool
+    service_record_id: Optional[str] = None
+    notes: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class ScoringRuleOut(BaseModel):
+    activity: str
+    points: int
+    description: str
+    ethical_safeguard: str
+
+
+class SaathiDashboardStatsOut(BaseModel):
+    mechanic_id: str
+    display_name: str
+    workshop_name: Optional[str]
+    workshop_city: Optional[str]
+    profile_completeness_percent: int
+    total_points: int
+    tier: str
+    next_tier: Optional[str] = None
+    points_to_next_tier: int = 0
+    completed_modules_count: int
+    total_modules_count: int
+    verified_findings_count: int
+    recorded_services_count: int
+    total_referrals_count: int
+    completed_referrals_count: int
+    badges_earned_count: int
+    total_badges_count: int
+    earned_badges: List[MechanicBadgeOut]
+    all_badges: List[MechanicBadgeOut]
+    scoring_rules: List[ScoringRuleOut]
+    case_study_context: dict
+
+
+class SaathiProgramInitiativeOut(BaseModel):
+    id: str
+    title: str
+    category: str
+    description: str
+    eligibility_level: str
+    status: str
+    tool_specs: Optional[dict] = None
+
+    model_config = {"from_attributes": True}

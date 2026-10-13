@@ -108,3 +108,139 @@ export interface ServiceRecord {
   notes: string | null;
   created_at: string;
 }
+
+// ── GripWise Saathi Types ──────────────────────────────────────────
+
+export interface MechanicProfile {
+  user_id: string;
+  display_name: string;
+  workshop_name: string | null;
+  workshop_city: string | null;
+  years_experience: number | null;
+  specialization: string | null;
+  workshop_address: string | null;
+  phone: string | null;
+  bio: string | null;
+  certifications?: string[] | null;
+  completion_percent: number;
+  completion_checklist: Record<string, boolean>;
+}
+
+export interface QuizQuestion {
+  id: number;
+  prompt: string;
+  options: string[];
+  correct_index: number;
+  explanation: string;
+}
+
+export interface LearningModuleSummary {
+  id: string;
+  module_code: string;
+  title: string;
+  category: string;
+  estimated_minutes: number;
+  summary: string;
+  points_reward: number;
+  technical_source: string;
+  completed: boolean;
+  score_percent?: number | null;
+  completed_at?: string | null;
+}
+
+export interface LearningModuleDetail extends LearningModuleSummary {
+  content_markdown: string;
+  quiz_questions: QuizQuestion[];
+}
+
+export interface QuizQuestionFeedback {
+  question_id: number;
+  selected_index: number;
+  correct_index: number;
+  is_correct: boolean;
+  explanation: string;
+}
+
+export interface QuizResult {
+  module_id: string;
+  score_percent: number;
+  passed: boolean;
+  points_awarded: number;
+  total_points: number;
+  tier: string;
+  newly_earned_badges: string[];
+  feedback: QuizQuestionFeedback[];
+}
+
+export interface MechanicBadge {
+  id: string;
+  title: string;
+  description: string;
+  criteria_description: string;
+  icon_name: string;
+  category: string;
+  points_threshold?: number | null;
+  earned: boolean;
+  earned_at?: string | null;
+}
+
+export interface CustomerReferral {
+  id: string;
+  mechanic_id: string;
+  customer_name_masked: string;
+  customer_phone_masked?: string | null;
+  vehicle_model: string;
+  tyre_need: string;
+  status: "PENDING" | "CONTACTED" | "SERVICE_COMPLETED" | "EXPIRED";
+  consent_confirmed: boolean;
+  service_record_id?: string | null;
+  notes?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ScoringRule {
+  activity: string;
+  points: number;
+  description: string;
+  ethical_safeguard: string;
+}
+
+export interface SaathiDashboardStats {
+  mechanic_id: string;
+  display_name: string;
+  workshop_name: string | null;
+  workshop_city: string | null;
+  profile_completeness_percent: number;
+  total_points: number;
+  tier: string;
+  next_tier?: string | null;
+  points_to_next_tier: number;
+  completed_modules_count: number;
+  total_modules_count: number;
+  verified_findings_count: number;
+  recorded_services_count: number;
+  total_referrals_count: number;
+  completed_referrals_count: number;
+  badges_earned_count: number;
+  total_badges_count: number;
+  earned_badges: MechanicBadge[];
+  all_badges: MechanicBadge[];
+  scoring_rules: ScoringRule[];
+  case_study_context: {
+    program_name: string;
+    challenge: string;
+    purpose: string;
+    disclaimer: string;
+  };
+}
+
+export interface SaathiProgramInitiative {
+  id: string;
+  title: string;
+  category: string;
+  description: string;
+  eligibility_level: string;
+  status: string;
+  tool_specs?: Record<string, string> | null;
+}
